@@ -1,0 +1,8 @@
+{
+  "LicenseChecker" : [
+    "node_modules",
+    ".git",
+    "fixtures",
+    "test*"
+  ]
+}
