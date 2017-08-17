@@ -1,9 +1,9 @@
 {
   "LicenseChecker" : [
-    "node_modules",
-    ".git",
-    "fixtures",
-    "test*",
-    "spec"
+    "**/node_modules",
+    "**/.git",
+    "**/resources/**",
+    "**/test*/**",
+    "**/spec/**"
   ]
 }

@@ -221,8 +221,8 @@ class LicenseChecker extends AbstractChecker {
   _getFiles(dir, allFiles) {
     const files = fs.readdirSync(dir);
     for (const i in files) {
-      if (!this._isExclude(files[i])) {
-        const name = dir + '/' + files[i];
+      const name = dir + '/' + files[i];
+      if (!this._isExclude(name)) {
         if (fs.statSync(name).isDirectory()) {
           this._getFiles(name, allFiles);
         } else {
