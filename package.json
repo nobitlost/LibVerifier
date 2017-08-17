@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lospennikov-nbl/lib-verifier.git"
+    "url": "git+https://github.com/nobitlost/LibVerifier.git"
   },
   "keywords": [
     "validation",
@@ -17,9 +17,9 @@
   "author": "Lev Ospennikov",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lospennikov-nbl/lib-verifier/issues"
+    "url": "https://github.com/nobitlost/LibVerifier/issues"
   },
-  "homepage": "https://github.com/lospennikov-nbl/lib-verifier#readme",
+  "homepage": "https://github.com/nobitlost/LibVerifier#readme",
   "dependencies": {
     "commander": "^2.11.0",
     "git-clone-or-pull": "^2.2.0"

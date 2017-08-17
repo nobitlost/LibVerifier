@@ -1,6 +1,26 @@
-// Copyright (c) 2017 Electric Imp
-// This file is licensed under the MIT License
-// http://opensource.org/licenses/MIT
+// MIT License
+
+// Copyright 2017 Electric Imp
+
+// SPDX-License-Identifier: MIT
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+// EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+// OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
 
 'use strict';
 
@@ -12,8 +32,7 @@ const minimatch = require('minimatch');
 const AbstractChecker = require('./AbstractChecker');
 const CheckerWarning = AbstractChecker.Warning;
 
-const LICENSE_PATH = './license.txt';
-const LICENSE_FILE_PATH = './LICENSE.example';
+const LICENSE_FILE_PATH = './resources/LICENSE.example';
 
 
 class LicenseCheckerWarning extends CheckerWarning {
@@ -35,6 +54,11 @@ class LicenseChecker extends AbstractChecker {
     this._extensionsSet = new Set(['.js', '.nut']);
   }
 
+  /**
+   * Check path for License mistakes
+   * @param {string} path
+   * @return {[CheckerWarning]}
+   */
   check(dirpath) {
     const files = this._getFiles(dirpath, []);
     const errors = [];
@@ -43,17 +67,16 @@ class LicenseChecker extends AbstractChecker {
       if (this._extensionsSet.has(parsedPath.ext)) {
         errors.push(this._checkSourceFile(files[i]));
       } else if (parsedPath.name == 'LICENSE') {
-          errors.push(this._checkLicenseFile(files[i]));
+        errors.push(this._checkLicenseFile(files[i]));
       }
     }
-    return errors.filter((error) => error != null);
+    return errors.filter((error) => error != false);
   }
 
   _checkLicenseFile(filepath) {
     const content = fs.readFileSync(filepath, 'utf-8');
-    const originalLicense = fs.readFileSync(LICENSE_FILE_PATH, 'utf-8');
-    const checkedLicense = content.replace(/\d\d\d\d(\-\d\d\d\d)?/, '');
-    return this._compareLicenses(checkedLicense, originalLicense);
+    const output = this._compareWithLicense(content);
+    return output ? new LicenseCheckerWarning(output.message, output.line, filepath) : output;
   }
 
   _checkSourceFile(filepath) {
@@ -67,29 +90,34 @@ class LicenseChecker extends AbstractChecker {
     let commentsType = '';
     let offset = 0;
     for (let i = 0; i < lines.length; i++) {
-      lines[i] = lines[i].trim();
+      const line = lines[i].trim();
+
+       if (line == '') {
+          offset++;
+          continue;
+        } // skip empty strings
 
       if (commentsType == '') {
 
-        if (lines[i] == '' || lines[i].startsWith('#!')) {
+        if (line.startsWith('#!')) {
           offset++;
           continue;
-        } // skip empty and shebang strings
+        } // skip shebang strings
 
-        if (lines[i].startsWith('//')) {
+        if (line.startsWith('//')) {
           commentsType = '//';
-          licenseLines.push(lines[i].substring(2).trim());
-        } else if (lines[i].startsWith('/*')) {
+          licenseLines.push(line.substring(2).trim());
+        } else if (line.startsWith('/*')) {
           commentsType = '/*';
-          licenseLines.push(lines[i].substring(2).trim());
+          licenseLines.push(line.substring(2).trim());
         } else {
           return new LicenseCheckerWarning('License should be in header', i + 1, filepath);
         }
 
       } else if (commentsType = '//') {
 
-        if (lines[i].startsWith('//')) {
-          licenseLines.push(lines[i].substring(2).trim());
+        if (line.startsWith('//')) {
+          licenseLines.push(line.substring(2).trim());
         } else {
           break; // end
         }
@@ -97,14 +125,14 @@ class LicenseChecker extends AbstractChecker {
       } else if (commentsType = '/*') {
 
         let index;
-        if (index = lines[i].indexOf('*/') > -1) {
-          licenseLines.push(lines[i].substring(0, index).trim());
+        if (index = line.indexOf('*/') > -1) {
+          licenseLines.push(line.substring(0, index).trim());
           break;
         }
-        if (lines[i].startsWith('*')) {
-          lines[i] = lines[i].substring(1).trim();
+        if (line.startsWith('*')) {
+          line = line.substring(1).trim();
         }
-        licenseLines.push(lines[i]);
+        licenseLines.push(line);
 
       }
     }
@@ -115,11 +143,11 @@ class LicenseChecker extends AbstractChecker {
       return new LicenseCheckerWarning(output.message, offset + output.line, filepath, output.symbol);
     }
 
-    return null;
+    return false;
   }
 
   _compareWithLicense(checkedLicense) {
-    const originalLicense = fs.readFileSync(LICENSE_PATH, 'utf-8');
+    const originalLicense = fs.readFileSync(LICENSE_FILE_PATH, 'utf-8');
     checkedLicense = checkedLicense.replace(/\d\d\d\d(\-\d\d\d\d)?/, '');
     return this._compareLicenses(checkedLicense, originalLicense);
   }
@@ -154,7 +182,28 @@ class LicenseChecker extends AbstractChecker {
       }
 
     }
-    return null;
+    let tail;
+    if (tail = this._isStringHasEnd(checkedLicense, checkedLicIndex)) {
+      return {
+        message : `unexpected end of license "${tail}"`,
+        line : checkedLicIndex - lastLB
+      };
+    }
+    if (tail = this._isStringHasEnd(originalLicense, originalLicIndex)) {
+      return {
+        message : `missing end of license "${tail}"`,
+        line : checkedLicIndex - lastLB
+      };
+    }
+    return false;
+  }
+
+  _isStringHasEnd(str, index) {
+    const endOfString = str.substring(index);
+    if (!/^(\s+)?$/.test(endOfString)) {
+      return endOfString;
+    }
+    return false;
   }
 
   _findNearestWord(str, position) {
