@@ -28,6 +28,7 @@ const gitCloneOrPull = require('git-clone-or-pull');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
+const nodegit = require('nodegit');
 
 const LicenseChecker = require('./Checkers/LicenseChecker');
 const AbstractChecker = require('./Checkers/AbstractChecker');
@@ -41,6 +42,7 @@ class Verifier {
   constructor() {
     this._local = false;
     this.excludeFile = DEFAULT_EXCLUDE;
+    this._branch = '';
   }
 
   init() {
@@ -51,7 +53,6 @@ class Verifier {
     }
     this.checkers = [new LicenseChecker(this.exclude)];
   }
-
 
   verify(link) {
     return this._getRepo(link).then(path => {
@@ -75,7 +76,10 @@ class Verifier {
       return Promise.resolve(name);
     }
     return new Promise((resolve, reject) => {
-      gitCloneOrPull(link, path.join(process.cwd(), name), err => {
+      const options = {};
+      options.path = path.join(process.cwd(), name);
+      options.branch = this._branch;
+      gitCloneOrPull(link, options, err => {
         if (err) reject(err);
         resolve(name);
       });
@@ -85,7 +89,7 @@ class Verifier {
   // temp
   _getLocalPath(link) {
     const parsedUrl = url.parse(link);
-    return parsedUrl.pathname.substring(1).replace('.', '_').replace('/', '_');
+    return parsedUrl.pathname.substring(1).replace(/\./g, '_').replace(/\//g, '_');
     // need more detailed replace or another way to generate path
   }
 
@@ -116,6 +120,13 @@ class Verifier {
     this._local = value;
   }
 
+  get branch() {
+    return this._branch;
+  }
+
+  set branch(value) {
+    this._branch = value;
+  }
   get exclude() {
     return this._exclude;
   }

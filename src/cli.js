@@ -40,7 +40,8 @@ program
   }
 })
 .option('-l, --local', 'Do not pull before every run', () => verifier.local = true)
-.option('--exclude-file <file>', (file) => { verifier.excludeFile = file;})
+.option('-b, --branch <branch_name>', 'Specify git branch', (branch) => verifier.branch = branch)
+.option('--exclude-file <file>', 'Specify exclude file', (file) => { verifier.excludeFile = file;})
 .parse(process.argv);
 
 verifier.init();
