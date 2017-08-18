@@ -28,7 +28,6 @@ const gitCloneOrPull = require('git-clone-or-pull');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
-const nodegit = require('nodegit');
 
 const LicenseChecker = require('./Checkers/LicenseChecker');
 const AbstractChecker = require('./Checkers/AbstractChecker');
