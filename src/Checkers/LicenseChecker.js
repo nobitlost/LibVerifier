@@ -157,18 +157,36 @@ class LicenseChecker extends AbstractChecker {
     let originalLicIndex = 0;
     let lineNum = 1;
     let lastLB = 0;
-    for (; (checkedLicIndex < checkedLicense.length) && (originalLicIndex < originalLicense.length); checkedLicIndex++, originalLicIndex++) {
 
+    for (; (checkedLicIndex < checkedLicense.length) && (originalLicIndex < originalLicense.length); checkedLicIndex++, originalLicIndex++) {
+      let checkedSpace = false;
+      let originalSpace = false;
       while ( (checkedLicIndex < checkedLicense.length) && (/\s/.test(checkedLicense[checkedLicIndex]))) {
         if (checkedLicense[checkedLicIndex] == '\n') {
           lineNum++;
           lastLB = checkedLicIndex;
         }
+        checkedSpace = true;
         checkedLicIndex++;
       }
 
       while ( (originalLicIndex < originalLicense.length) && (/\s/.test(originalLicense[originalLicIndex]))) {
+        originalSpace = true;
         originalLicIndex++;
+      }
+
+      if (originalSpace != checkedSpace) {
+        let message = '';
+        if (originalSpace) {
+          message = 'missing space in license';
+        } else {
+          message = 'extra space in license';
+        }
+       return {
+          message : message,
+          line : lineNum,
+          symbol :checkedLicIndex - lastLB - 1
+        };
       }
 
       if (checkedLicense[checkedLicIndex] != originalLicense[originalLicIndex]) {

@@ -53,6 +53,10 @@ class Verifier {
     this.checkers = [new LicenseChecker(this.exclude)];
   }
 
+  /**
+   * @param link link to git repo
+   * @return {Promise}
+   */
   verify(link) {
     return this._getRepo(link).then(path => {
       let verified = true;
@@ -69,6 +73,11 @@ class Verifier {
     });
   }
 
+
+  /**
+   * @param link link to git repo
+   * @return {Promise}
+   */
   _getRepo(link) {
     const name = this._getLocalPath(link);
     if (this.local && fs.existsSync(name)) {
@@ -85,7 +94,10 @@ class Verifier {
     });
   }
 
-  // temp
+  /**
+   * @param link link to git repo
+   * @return {String} name of local folder
+   */
   _getLocalPath(link) {
     const parsedUrl = url.parse(link);
     return parsedUrl.pathname.substring(1).replace(/\./g, '_').replace(/\//g, '_');
