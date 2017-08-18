@@ -189,6 +189,9 @@ class LicenseChecker extends AbstractChecker {
         };
       }
 
+      // check if we doesn't reach end of licenses
+      if ( !((checkedLicIndex < checkedLicense.length) && (originalLicIndex < originalLicense.length))) break;
+
       if (checkedLicense[checkedLicIndex] != originalLicense[originalLicIndex]) {
         const firstWord = this._findNearestWord(checkedLicense, checkedLicIndex);
         const secondWord = this._findNearestWord(originalLicense, originalLicIndex);
@@ -201,13 +204,16 @@ class LicenseChecker extends AbstractChecker {
 
     }
     let tail;
-    if (tail = this._isStringHasEnd(checkedLicense, checkedLicIndex)) {
+    // it is ok if we have another comments on the next line
+    // we decrease checkedLicIndex because we skipped \n
+    if (tail = this._isStringHasEnd(checkedLicense, checkedLicIndex - 1, /^(\s*\n[\s|\S]*)?$/)) {
       return {
         message : `unexpected end of license "${tail}"`,
         line : checkedLicIndex - lastLB
       };
     }
-    if (tail = this._isStringHasEnd(originalLicense, originalLicIndex)) {
+
+    if (tail = this._isStringHasEnd(originalLicense, originalLicIndex, /^(\s+)?$/)) {
       return {
         message : `missing end of license "${tail}"`,
         line : checkedLicIndex - lastLB
@@ -216,16 +222,16 @@ class LicenseChecker extends AbstractChecker {
     return false;
   }
 
-  _isStringHasEnd(str, index) {
+  _isStringHasEnd(str, index, acceptableEnd) {
     const endOfString = str.substring(index);
-    if (!/^(\s+)?$/.test(endOfString)) {
+    if (!acceptableEnd.test(endOfString)) {
       return endOfString;
     }
     return false;
   }
 
   _findNearestWord(str, position) {
-    const end = (position) + str.substring(position).search(/\s/);
+    const end = position + str.substring(position).search(/\s/);
     while (!/\s/.test(str[position - 1]) && position > 0) {
       position--;
     }
