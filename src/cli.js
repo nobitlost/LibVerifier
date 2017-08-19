@@ -44,6 +44,11 @@ program
 .option('--exclude-file <file>', 'Specify exclude file', (file) => { verifier.excludeFile = file;})
 .parse(process.argv);
 
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+  return;
+}
+
 verifier.init();
 verifier.verify(checkedUrl).then(result => {
   console.log(result);
