@@ -1,19 +1,19 @@
 // MIT License
-
+//
 // Copyright 2017 Electric Imp
-
+//
 // SPDX-License-Identifier: MIT
-
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
@@ -24,7 +24,6 @@
 
 'use strict';
 
-
 const fs = require('fs');
 const path = require('path');
 const minimatch = require('minimatch');
@@ -34,9 +33,7 @@ const CheckerWarning = AbstractChecker.Warning;
 
 const LICENSE_FILE_PATH = './resources/LICENSE.example';
 
-
 class LicenseCheckerWarning extends CheckerWarning {
-
   constructor(message, line, file, sym = -1) {
     super(message, line, file, 'LicenseChecker', sym);
   }
@@ -47,7 +44,6 @@ class LicenseCheckerWarning extends CheckerWarning {
 };
 
 class LicenseChecker extends AbstractChecker {
-
   constructor(exclude) {
     super();
     this.excludeList = exclude;
@@ -57,7 +53,7 @@ class LicenseChecker extends AbstractChecker {
   /**
    * Check path for License mistakes
    * @param {string} path
-   * @return {[CheckerWarning]}
+   * @return {[CheckerWarning]} where first check warning it is LICENSE warning if it exists
    */
   check(dirpath) {
     const files = this._getFiles(dirpath, []);
@@ -66,11 +62,11 @@ class LicenseChecker extends AbstractChecker {
       const parsedPath = path.parse(files[i]);
       if (this._extensionsSet.has(parsedPath.ext)) {
         errors.push(this._checkSourceFile(files[i]));
-      } else if (parsedPath.name == 'LICENSE') {
-        errors.push(this._checkLicenseFile(files[i]));
+      } else if (parsedPath.name === 'LICENSE') {
+        errors.unshift(this._checkLicenseFile(files[i]));
       }
     }
-    return errors.filter((error) => error != false);
+    return errors.filter((error) => error !== false);
   }
 
   _checkLicenseFile(filepath) {
@@ -92,18 +88,16 @@ class LicenseChecker extends AbstractChecker {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
 
-       if (line == '') {
-          offset++;
-          continue;
-        } // skip empty strings
+      if (line == '') {
+        offset++;
+        continue;
+      } // skip empty strings
 
-      if (commentsType == '') {
-
+      if (commentsType === '') {
         if (line.startsWith('#!')) {
           offset++;
           continue;
         } // skip shebang strings
-
         if (line.startsWith('//')) {
           commentsType = '//';
           licenseLines.push(line.substring(2).trim());
@@ -113,19 +107,15 @@ class LicenseChecker extends AbstractChecker {
         } else {
           return new LicenseCheckerWarning('License should be in header', i + 1, filepath);
         }
-
-      } else if (commentsType = '//') {
-
+      } else if (commentsType === '//') {
         if (line.startsWith('//')) {
           licenseLines.push(line.substring(2).trim());
         } else {
           break; // end
         }
-
-      } else if (commentsType = '/*') {
-
+      } else if (commentsType === '/*') {
         let index;
-        if (index = line.indexOf('*/') > -1) {
+        if ((index = line.indexOf('*/')) > -1) {
           licenseLines.push(line.substring(0, index).trim());
           break;
         }
@@ -133,11 +123,10 @@ class LicenseChecker extends AbstractChecker {
           line = line.substring(1).trim();
         }
         licenseLines.push(line);
-
       }
     }
     const checkedLicense = licenseLines.reduce((prev, curr) => prev + '\n' + curr);
-    const output = this._compareWithLicense(checkedLicense, offset);
+    const output = this._compareWithLicense(checkedLicense);
 
     if (output) {
       return new LicenseCheckerWarning(output.message, offset + output.line, filepath, output.symbol);
@@ -158,11 +147,11 @@ class LicenseChecker extends AbstractChecker {
     let lineNum = 1;
     let lastLB = 0;
 
-    for (; (checkedLicIndex < checkedLicense.length) && (originalLicIndex < originalLicense.length); checkedLicIndex++, originalLicIndex++) {
+    for (; (checkedLicIndex < checkedLicense.length) && (originalLicIndex < originalLicense.length); checkedLicIndex++ , originalLicIndex++) {
       let checkedSpace = false;
       let originalSpace = false;
-      while ( (checkedLicIndex < checkedLicense.length) && (/\s/.test(checkedLicense[checkedLicIndex]))) {
-        if (checkedLicense[checkedLicIndex] == '\n') {
+      while ((checkedLicIndex < checkedLicense.length) && (/\s/.test(checkedLicense[checkedLicIndex]))) {
+        if (checkedLicense[checkedLicIndex] === '\n') {
           lineNum++;
           lastLB = checkedLicIndex;
         }
@@ -170,7 +159,7 @@ class LicenseChecker extends AbstractChecker {
         checkedLicIndex++;
       }
 
-      while ( (originalLicIndex < originalLicense.length) && (/\s/.test(originalLicense[originalLicIndex]))) {
+      while ((originalLicIndex < originalLicense.length) && (/\s/.test(originalLicense[originalLicIndex]))) {
         originalSpace = true;
         originalLicIndex++;
       }
@@ -182,23 +171,23 @@ class LicenseChecker extends AbstractChecker {
         } else {
           message = 'extra space in license';
         }
-       return {
-          message : message,
-          line : lineNum,
-          symbol :checkedLicIndex - lastLB - 1
+        return {
+          message: message,
+          line: lineNum,
+          symbol: checkedLicIndex - lastLB - 1
         };
       }
 
       // check if we doesn't reach end of licenses
-      if ( !((checkedLicIndex < checkedLicense.length) && (originalLicIndex < originalLicense.length))) break;
+      if (!((checkedLicIndex < checkedLicense.length) && (originalLicIndex < originalLicense.length))) break;
 
-      if (checkedLicense[checkedLicIndex] != originalLicense[originalLicIndex]) {
+      if (checkedLicense[checkedLicIndex] !== originalLicense[originalLicIndex]) {
         const firstWord = this._findNearestWord(checkedLicense, checkedLicIndex);
         const secondWord = this._findNearestWord(originalLicense, originalLicIndex);
         return {
-          message : `expected "${secondWord}", but find "${firstWord}" in license header`,
-          line : lineNum,
-          symbol :checkedLicIndex - lastLB
+          message: `expected "${secondWord}", but find "${firstWord}" in license header`,
+          line: lineNum,
+          symbol: checkedLicIndex - lastLB
         };
       }
 
@@ -206,17 +195,19 @@ class LicenseChecker extends AbstractChecker {
     let tail;
     // it is ok if we have another comments on the next line
     // we decrease checkedLicIndex because we skipped \n
-    if (tail = this._isStringHasEnd(checkedLicense, checkedLicIndex - 1, /^(\s*\n[\s|\S]*)?$/)) {
+    if (tail = this._isStringHasEnd(checkedLicense, checkedLicIndex, /^(\s*\n[\s|\S]*)?$/)) {
       return {
-        message : `unexpected end of license "${tail}"`,
-        line : checkedLicIndex - lastLB
+        message: `unexpected end of license "${tail}"`,
+        line: lineNum,
+        sym: checkedLicIndex - lastLB
       };
     }
 
     if (tail = this._isStringHasEnd(originalLicense, originalLicIndex, /^(\s+)?$/)) {
       return {
-        message : `missing end of license "${tail}"`,
-        line : checkedLicIndex - lastLB
+        message: `missing end of license "${tail}"`,
+        line: lineNum,
+        sym: checkedLicIndex - lastLB
       };
     }
     return false;
@@ -235,7 +226,7 @@ class LicenseChecker extends AbstractChecker {
     while (!/\s/.test(str[position - 1]) && position > 0) {
       position--;
     }
-    return str.substring(position, end == -1 ? str.length : end);
+    return str.substring(position, end === -1 ? str.length : end);
   }
 
   _isExclude(filepath) {
@@ -269,13 +260,12 @@ class LicenseChecker extends AbstractChecker {
     const filenames = settings.LicenseChecker;
     // filters not empty strings, and makes regular expression from template
     const patterns = filenames.map((value) => value.trimLeft()) // trim for "is commented" check
-      .filter((value) => (value != '' && value[0] != '#'))
+      .filter((value) => (value !== '' && value[0] !== '#'))
       .map((value) => minimatch.makeRe(value));
     this._excludeList = patterns;
   }
 
 }
 
-
 module.exports.Warning = LicenseCheckerWarning;
-module.exports  = LicenseChecker;
+module.exports = LicenseChecker;
