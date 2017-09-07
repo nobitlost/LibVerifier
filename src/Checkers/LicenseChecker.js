@@ -221,9 +221,9 @@ class LicenseChecker extends checker {
   }
 
   _getFiles(dir, allFiles) {
-    const files = fs.readdirSync(dir);
-    for (const i in files) {
-      const name = dir + '/' + files[i];
+    const checkedFiles = fs.readdirSync(dir);
+    for (const file of checkedFiles) {
+      const name = dir + '/' + file;
       if (!this._isExclude(name)) {
         if (fs.statSync(name).isDirectory()) {
           this._getFiles(name, allFiles);

@@ -24,23 +24,6 @@
 
 'use strict';
 
-class CheckerWarning {
-  constructor(message, line, file, checker, sym = -1) {
-    this._line = line;
-    this._sym = sym;
-    this._message = message;
-    this._file = file;
-    this._checker = checker;
-  }
-
-  toString() {
-    return `${this._checker} Error:
-            \t${this._message}
-            \tin ${this._file}
-            \tat line:${this._line}` + (this._sym === -1 ? '' : ` sym:${this._sym}`);
-  }
-}
-
 class AbstractChecker {
 
   /**
@@ -72,4 +55,3 @@ class AbstractChecker {
 }
 
 module.exports = AbstractChecker;
-module.exports.Warning = CheckerWarning;

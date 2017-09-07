@@ -29,7 +29,10 @@ const program = require('commander');
 const Verifier = require('./index.js');
 const url = require('url');
 let checkedUrl = '';
-const verifier = new Verifier();
+
+let local = false;
+let branch = '';
+let excludeFile = null;
 
 program
 .version('0.0.1')
@@ -39,17 +42,18 @@ program
     checkedUrl = path;
   }
 })
-.option('-l, --local', 'Do not pull before every run', () => verifier.local = true)
-.option('-b, --branch <branch_name>', 'Specify git branch', (branch) => verifier.branch = branch)
-.option('--exclude-file <file>', 'Specify exclude file', (file) => { verifier.excludeFile = file;})
+.option('-l, --local', 'Do not pull before every run', () => local = true)
+.option('-b, --branch <branch_name>', 'Specify git branch', (newBranch) => branch = newBranch)
+.option('--exclude-file <file>', 'Specify exclude file', (file) => { excludeFile = file;})
 .parse(process.argv);
 
 if (!process.argv.slice(2).length) {
   program.outputHelp();
   return;
 }
-
-verifier.init();
+const verifier = new Verifier(excludeFile);
+verifier.branch = branch;
+verifier.local = local;
 verifier.verify(checkedUrl).then(result => {
   console.log(result);
 });

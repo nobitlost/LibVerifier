@@ -38,19 +38,25 @@ const DEFAULT_EXCLUDE = '../excludes.json';
  */
 class Verifier {
 
-  constructor() {
+  constructor(excludeFile = null) {
     this._local = false;
-    this.excludeFile = DEFAULT_EXCLUDE;
     this._branch = '';
-  }
 
-  init() {
-    try {
-      this.exclude = require(this.excludeFile);
-    } catch (err) {
-      this.logger.error(err);
+    if (excludeFile === null) {
+      this.excludeFile = DEFAULT_EXCLUDE;
+    } else {
+      this.excludeFile = excludeFile;
     }
-    this.checkers = [new LicenseChecker(this.exclude)];
+
+    this._exclude = null;
+    try {
+      this._exclude = require(this.excludeFile);
+    } catch (err) {
+      if (excludeFile != DEFAULT_EXCLUDE) {
+        this.logger.error(err);
+      }
+    }
+    this.checkers = [new LicenseChecker(this._exclude)];
   }
 
   /**
