@@ -27,206 +27,193 @@
 const fs = require('fs');
 const path = require('path');
 const minimatch = require('minimatch');
-
-const AbstractChecker = require('./AbstractChecker');
-const CheckerWarning = AbstractChecker.Warning;
+const checker = require('./AbstractChecker');
 
 const LICENSE_FILE_PATH = './resources/LICENSE.example';
 
-class LicenseCheckerWarning extends CheckerWarning {
-  constructor(message, line, file, sym = -1) {
-    super(message, line, file, 'LicenseChecker', sym);
+const TOKENS = {
+  END: 'END_OF_LICENSE',
+};
+
+class ErrorMessage {
+
+  constructor(message, lineNum, file, checker, linePos = -1) {
+    this._line = lineNum;
+    this._linePos = linePos;
+    this._message = message;
+    this._file = file;
+    this._checker = checker;
   }
 
   toString() {
-    return super.toString();
+    return `${this._checker} Error:
+            \t${this._message}
+            \tin ${this._file}
+            \tat ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`);
   }
-};
+}
 
-class LicenseChecker extends AbstractChecker {
-  constructor(exclude) {
+class LicenseChecker extends checker {
+
+  constructor(exclude = null) {
     super();
     this.excludeList = exclude;
     this._extensionsSet = new Set(['.js', '.nut']);
   }
 
+
+  /**
+   * Retrieves the next token (word from the file)
+   * @param text to parse
+   * @param {Boolean} isCode defines, have license comments in License
+   * @return the next token or null, if eof reached
+   */
+  *_generateTokens(text, isCode) {
+    let pos = 0; // Current global position in the file
+    let lineNum = 1;  // Current line number
+    let linePos = 0; // Current position in the line
+    let res;
+    if (isCode) {
+      pos = this._skipToLicenseHeader(text);
+      pos = this._skipToTextInComments(text, pos);
+      if (pos === null) {
+        return this._createJsonResponse(TOKENS.END, lineNum, linePos, linePos);
+      }
+    }
+    while (pos < text.length) {
+      res = null;
+      for (; pos < text.length; pos++) {
+        const c = text[pos];
+
+        if (c === '\n') {
+          lineNum++;
+          linePos = pos;
+          if (isCode)  {
+            pos = this._skipToTextInComments(text, pos + 1);
+            if (pos === null) {
+              if (res !== null) {
+                yield this._createJsonResponse(res, lineNum, linePos, linePos);
+              }
+              return this._createJsonResponse(TOKENS.END, lineNum, linePos, linePos);
+            }
+          }
+        }
+
+        if (/\s/.test(c)) {
+          if (!res) continue; else break;
+        }
+
+        res = res ? res + c : '' + c;
+      }
+
+      if (res == null) break; // for cases when \n is the last sym
+
+      yield this._createJsonResponse(res, lineNum, linePos, pos);
+    }
+    return this._createJsonResponse(TOKENS.END, lineNum, linePos, pos);
+  }
+
+  /**
+   * Skips all lines that start with '#' and contain only white space characters.
+   * Increments the _lineNum counter as necessary.
+   * @private
+   */
+  _skipToLicenseHeader(text) {
+    let pos = 0;
+    while (pos < text.length) {
+      const char = text[pos];
+      if (char === '#') {
+        pos = this._skipNextLine(text, pos);
+        continue;
+      }
+      if (!/\s/.test(char)) {
+        break;
+      }
+      pos++;
+    }
+    return pos;
+  }
+
+  _skipNextLine(text, pos) {
+    while (pos < text.length && text[pos] != '\n') {
+      pos++;
+    }
+    if (pos != text.length) pos++;
+    return pos;
+  }
+
+  _createJsonResponse(token, lineNum, linePos, currentPos) {
+    return {
+      token: token,
+      lineNum: lineNum,
+      linePos: currentPos - linePos
+    };
+  }
+
+  /**
+   * Skips to the text after the single line comments ("//") starting from _pos.
+   *
+   * @private
+   * @return offset from the current position (_pos) to the commented text or null if no comments found.
+   */
+  _skipToTextInComments(text, startPos) {
+    if (startPos + 1 >= text.length) return null;
+    if (text[startPos] != '/' || text[startPos + 1] != '/') {
+      return null;
+    } else {
+      return startPos + 2;
+    }
+  }
+
   /**
    * Check path for License mistakes
    * @param {string} path
-   * @return {[CheckerWarning]} where first check warning it is LICENSE warning if it exists
+   * @return {[warning]}
    */
   check(dirpath) {
-    const files = this._getFiles(dirpath, []);
+    const allFiles = this._getFiles(dirpath, []);
     const errors = [];
-    for (const i in files) {
-      const parsedPath = path.parse(files[i]);
+    for (const file of allFiles) {
+      const parsedPath = path.parse(file);
       if (this._extensionsSet.has(parsedPath.ext)) {
-        errors.push(this._checkSourceFile(files[i]));
+        errors.push(this._compareWithLicense(file, true));
       } else if (parsedPath.name === 'LICENSE') {
-        errors.unshift(this._checkLicenseFile(files[i]));
+        errors.push(this._compareWithLicense(file, false));
       }
     }
-    return errors.filter((error) => error !== false);
+    return errors.filter((error) => error != false);
   }
 
-  _checkLicenseFile(filepath) {
-    const content = fs.readFileSync(filepath, 'utf-8');
-    const output = this._compareWithLicense(content);
-    return output ? new LicenseCheckerWarning(output.message, output.line, filepath) : output;
-  }
+  _compareWithLicense(filepath, isCode) {
+    const checkedLicense = fs.readFileSync(filepath, 'utf-8').replace(/\d\d\d\d(\-\d\d\d\d)?/, '');
 
-  _checkSourceFile(filepath) {
-    const content = fs.readFileSync(filepath, 'utf-8');
-    const lines = content.split(/\n/);
-    if (!lines) {
-      return new LicenseCheckerWarning('File have not License Header', 0, filepath);
-    }
-
-    const licenseLines = [];
-    let commentsType = '';
-    let offset = 0;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-
-      if (line == '') {
-        offset++;
-        continue;
-      } // skip empty strings
-
-      if (commentsType === '') {
-        if (line.startsWith('#!')) {
-          offset++;
-          continue;
-        } // skip shebang strings
-        if (line.startsWith('//')) {
-          commentsType = '//';
-          licenseLines.push(line.substring(2).trim());
-        } else if (line.startsWith('/*')) {
-          commentsType = '/*';
-          licenseLines.push(line.substring(2).trim());
-        } else {
-          return new LicenseCheckerWarning('License should be in header', i + 1, filepath);
-        }
-      } else if (commentsType === '//') {
-        if (line.startsWith('//')) {
-          licenseLines.push(line.substring(2).trim());
-        } else {
-          break; // end
-        }
-      } else if (commentsType === '/*') {
-        let index;
-        if ((index = line.indexOf('*/')) > -1) {
-          licenseLines.push(line.substring(0, index).trim());
-          break;
-        }
-        if (line.startsWith('*')) {
-          line = line.substring(1).trim();
-        }
-        licenseLines.push(line);
-      }
-    }
-    const checkedLicense = licenseLines.reduce((prev, curr) => prev + '\n' + curr);
-    const output = this._compareWithLicense(checkedLicense);
-
-    if (output) {
-      return new LicenseCheckerWarning(output.message, offset + output.line, filepath, output.symbol);
-    }
-
-    return false;
-  }
-
-  _compareWithLicense(checkedLicense) {
     const originalLicense = fs.readFileSync(LICENSE_FILE_PATH, 'utf-8');
-    checkedLicense = checkedLicense.replace(/\d\d\d\d(\-\d\d\d\d)?/, '');
-    return this._compareLicenses(checkedLicense, originalLicense);
+
+    const output = this._compareTwoLicenseTexts(checkedLicense, originalLicense, isCode);
+    return output ? new ErrorMessage(output.message, output.lineNum, filepath, 'LicenseChecker', output.linePos) : output;
   }
 
-  _compareLicenses(checkedLicense, originalLicense) {
-    let checkedLicIndex = 0;
-    let originalLicIndex = 0;
-    let lineNum = 1;
-    let lastLB = 0;
+  _compareTwoLicenseTexts(checkedText, originalText, isCode) {
+    const checkedGen = this._generateTokens(checkedText, isCode);
+    const originalGen = this._generateTokens(originalText, false);
 
-    for (; (checkedLicIndex < checkedLicense.length) && (originalLicIndex < originalLicense.length); checkedLicIndex++ , originalLicIndex++) {
-      let checkedSpace = false;
-      let originalSpace = false;
-      while ((checkedLicIndex < checkedLicense.length) && (/\s/.test(checkedLicense[checkedLicIndex]))) {
-        if (checkedLicense[checkedLicIndex] === '\n') {
-          lineNum++;
-          lastLB = checkedLicIndex;
-        }
-        checkedSpace = true;
-        checkedLicIndex++;
-      }
-
-      while ((originalLicIndex < originalLicense.length) && (/\s/.test(originalLicense[originalLicIndex]))) {
-        originalSpace = true;
-        originalLicIndex++;
-      }
-
-      if (originalSpace != checkedSpace) {
-        let message = '';
-        if (originalSpace) {
-          message = 'missing space in license';
-        } else {
-          message = 'extra space in license';
-        }
-        return {
-          message: message,
-          line: lineNum,
-          symbol: checkedLicIndex - lastLB - 1
-        };
-      }
-
-      // check if we doesn't reach end of licenses
-      if (!((checkedLicIndex < checkedLicense.length) && (originalLicIndex < originalLicense.length))) break;
-
-      if (checkedLicense[checkedLicIndex] !== originalLicense[originalLicIndex]) {
-        const firstWord = this._findNearestWord(checkedLicense, checkedLicIndex);
-        const secondWord = this._findNearestWord(originalLicense, originalLicIndex);
-        return {
-          message: `expected "${secondWord}", but find "${firstWord}" in license header`,
-          line: lineNum,
-          symbol: checkedLicIndex - lastLB
-        };
-      }
-
-    }
-    let tail;
-    // it is ok if we have another comments on the next line
-    // we decrease checkedLicIndex because we skipped \n
-    if (tail = this._isStringHasEnd(checkedLicense, checkedLicIndex, /^(\s*\n[\s|\S]*)?$/)) {
-      return {
-        message: `unexpected end of license "${tail}"`,
-        line: lineNum,
-        sym: checkedLicIndex - lastLB
-      };
+    let checkedToken = checkedGen.next().value;
+    let originalToken = originalGen.next().value;
+    while ((originalToken.token === checkedToken.token)
+           && (checkedToken.token != TOKENS.END) && (originalToken.token != TOKENS.END)) {
+      checkedToken = checkedGen.next().value;
+      originalToken = originalGen.next().value;
     }
 
-    if (tail = this._isStringHasEnd(originalLicense, originalLicIndex, /^(\s+)?$/)) {
+    if (originalToken.token !== checkedToken.token) {
+      const message = `Unexpected token "${checkedToken.token}", expected "${originalToken.token}" `;
       return {
-        message: `missing end of license "${tail}"`,
-        line: lineNum,
-        sym: checkedLicIndex - lastLB
+        message: message,
+        lineNum: checkedToken.lineNum,
+        linePos: checkedToken.linePos
       };
     }
     return false;
-  }
-
-  _isStringHasEnd(str, index, acceptableEnd) {
-    const endOfString = str.substring(index);
-    if (!acceptableEnd.test(endOfString)) {
-      return endOfString;
-    }
-    return false;
-  }
-
-  _findNearestWord(str, position) {
-    const end = position + str.substring(position).search(/\s/);
-    while (!/\s/.test(str[position - 1]) && position > 0) {
-      position--;
-    }
-    return str.substring(position, end === -1 ? str.length : end);
   }
 
   _isExclude(filepath) {
@@ -257,15 +244,33 @@ class LicenseChecker extends AbstractChecker {
    * @param {JSON} settings for exclude file. '' for default
    */
   set excludeList(settings) {
+    if (settings == null) {
+      this._excludeList = [];
+      return;
+    }
     const filenames = settings.LicenseChecker;
     // filters not empty strings, and makes regular expression from template
     const patterns = filenames.map((value) => value.trimLeft()) // trim for "is commented" check
-      .filter((value) => (value !== '' && value[0] !== '#'))
+      .filter((value) => (value != '' && value[0] != '#'))
       .map((value) => minimatch.makeRe(value));
     this._excludeList = patterns;
   }
 
+  get extensionsSet() {
+    return this._extensionsSet;
+  }
+
+  /**
+   * @param {Set} set of extensions with leading dot
+   */
+  set extensionsSet(set) {
+    if (set instanceof Set) {
+      this._extensionsSet = set;
+    } else {
+      this.logger.error('Wrong argument type');
+    }
+  }
 }
 
-module.exports.Warning = LicenseCheckerWarning;
+module.exports.Warning = ErrorMessage;
 module.exports = LicenseChecker;
