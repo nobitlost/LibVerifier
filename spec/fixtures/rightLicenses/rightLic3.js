@@ -1,6 +1,9 @@
+#! /usr/bin/env node
+
+
 // MIT License
 //
-// Copyright 2017 ElectricImp
+// Copyright 2017 Electric Imp
 //
 // SPDX-License-Identifier: MIT
 //
@@ -21,39 +24,36 @@
 // OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
-
 'use strict';
 
+class AbstractChecker {
 
-const fs = require('fs');
+  /**
+   * Check path
+   * @param {string} path
+   * @return {[CheckerWarning]}
+   */
+  check(path) {
+  }
 
-const LicenseChecker = require('../../src/Checkers/LicenseChecker.js');
+  /**
+   * @return {{debug(),info(),warning(),error()}}
+   */
+  get logger() {
+    return this._logger || {
+      debug: console.log,
+      info: console.info,
+      warning: console.warning,
+      error: console.error
+    };
+  }
 
+  /**
+   * @param {{debug(),info(),warning(),error()}} value
+   */
+  set logger(value) {
+    this._logger = value;
+  }
+}
 
-describe('LicenseChecker', () => {
-  let licenseChecker;
-  const getFilesCount = function (dirPath) {
-    const files = fs.readdirSync(dirPath);
-    return files.length;
-  };
-
-  beforeEach(() => {
-    licenseChecker = new LicenseChecker();
-  });
-
-  it('should get ErrorMessages, when check wrong license', () => {
-    const pathWithWrongLics = './spec/fixtures/wrongLicenses/';
-    const res = licenseChecker.check(pathWithWrongLics);
-    // all licenses in file with mistake
-    expect(res.length).toEqual(getFilesCount(pathWithWrongLics));
-    // console.log(res); // to check what is wrong
-  });
-
-  it('shouldn\'t get ErrorMessages, when check right license', () => {
-    const pathWithRightLics = './spec/fixtures/rightLicenses/';
-    const res = licenseChecker.check(pathWithRightLics);
-    // all licenses in file is correct
-    expect(res.length).toEqual(0);
-  })
-
-});
+module.exports = AbstractChecker;

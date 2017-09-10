@@ -68,7 +68,7 @@ class LicenseChecker extends checker {
    * @param {Boolean} isCode defines, have license comments in License
    * @return the next token or null, if eof reached
    */
-  *_generateTokens(text, isCode) {
+  *_tokensIterator(text, isCode) {
     let pos = 0; // Current global position in the file
     let lineNum = 1;  // Current line number
     let linePos = 0; // Current position in the line
@@ -123,7 +123,7 @@ class LicenseChecker extends checker {
     while (pos < text.length) {
       const char = text[pos];
       if (char === '#') {
-        pos = this._skipNextLine(text, pos);
+        pos = this._skipToNextLine(text, pos);
         continue;
       }
       if (!/\s/.test(char)) {
@@ -134,7 +134,7 @@ class LicenseChecker extends checker {
     return pos;
   }
 
-  _skipNextLine(text, pos) {
+  _skipToNextLine(text, pos) {
     while (pos < text.length && text[pos] != '\n') {
       pos++;
     }
@@ -194,15 +194,15 @@ class LicenseChecker extends checker {
   }
 
   _compareTwoLicenseTexts(checkedText, originalText, isCode) {
-    const checkedGen = this._generateTokens(checkedText, isCode);
-    const originalGen = this._generateTokens(originalText, false);
+    const testedGen = this._tokensIterator(checkedText, isCode);
+    const goldenGen = this._tokensIterator(originalText, false);
 
-    let checkedToken = checkedGen.next().value;
-    let originalToken = originalGen.next().value;
+    let checkedToken = testedGen.next().value;
+    let originalToken = goldenGen.next().value;
     while ((originalToken.token === checkedToken.token)
            && (checkedToken.token != TOKENS.END) && (originalToken.token != TOKENS.END)) {
-      checkedToken = checkedGen.next().value;
-      originalToken = originalGen.next().value;
+      checkedToken = testedGen.next().value;
+      originalToken = goldenGen.next().value;
     }
 
     if (originalToken.token !== checkedToken.token) {
