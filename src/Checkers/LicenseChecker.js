@@ -51,6 +51,10 @@ class ErrorMessage {
             \tin ${this._file}
             \tat ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`);
   }
+
+  toShortString() {
+    return `${this._checker} Error in ${this._file} at ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`);
+  }
 }
 
 class LicenseChecker extends checker {
@@ -168,17 +172,18 @@ class LicenseChecker extends checker {
   /**
    * Check path for License mistakes
    * @param {string} path
-   * @return {[warning]}
+   * @return {[ErrorMessage]}
    */
   check(dirpath) {
     const allFiles = this._getFiles(dirpath, []);
     const errors = [];
+    errors.push(false); // reserved for LICENSE error
     for (const file of allFiles) {
       const parsedPath = path.parse(file);
       if (this._extensionsSet.has(parsedPath.ext)) {
         errors.push(this._compareWithLicense(file, true));
       } else if (parsedPath.name === 'LICENSE') {
-        errors.push(this._compareWithLicense(file, false));
+        errors[0] = this._compareWithLicense(file, false); // assign to reserved place
       }
     }
     return errors.filter((error) => error != false);

@@ -42,7 +42,7 @@ describe('LicenseChecker', () => {
   });
 
   it('should get ErrorMessages, when check wrong license', () => {
-    const pathWithWrongLics = './spec/fixtures/wrongLicenses/';
+    const pathWithWrongLics = './spec/fixtures/wrongLicenses';
     const res = licenseChecker.check(pathWithWrongLics);
     // all licenses in file with mistake
     expect(res.length).toEqual(getFilesCount(pathWithWrongLics));
@@ -50,10 +50,10 @@ describe('LicenseChecker', () => {
   });
 
   it('shouldn\'t get ErrorMessages, when check right license', () => {
-    const pathWithRightLics = './spec/fixtures/rightLicenses/';
+    const pathWithRightLics = './spec/fixtures/rightLicenses';
     const res = licenseChecker.check(pathWithRightLics);
     // all licenses in file is correct
     expect(res.length).toEqual(0);
-  })
+  });
 
 });

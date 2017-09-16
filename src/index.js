@@ -65,19 +65,38 @@ class Verifier {
    */
   verify(link) {
     return this._getRepo(link).then(path => {
+      const checkersErrors = [];
       let verified = true;
+
       this.checkers.forEach((checker) => {
         const errors = checker.check(path);
         if (errors.length != 0) {
+          checkersErrors.push(errors);
           errors.forEach((error) => {
-            this.logger.error(error.toString());
+            if (verified) this.logger.error('1) All files with errors:');
+            this.logger.error(error.toShortString());
+            // prepare to print short error messages
             verified = false;
           });
         }
       });
+
+      if (!verified) this.logger.error('2) Detailed errors:');
+
+      checkersErrors.forEach((listOfCheckerErr) => {
+        listOfCheckerErr.forEach((error) => {
+          this.logger.error(error.toString());
+        });
+      });
       return verified;
     });
   }
+
+
+  /**
+   *
+   */
+
 
   /**
    * @param link link to git repo
