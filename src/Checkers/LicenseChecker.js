@@ -27,6 +27,8 @@
 const fs = require('fs');
 const path = require('path');
 const minimatch = require('minimatch');
+const colors = require('colors/safe');
+
 const checker = require('./AbstractChecker');
 
 const LICENSE_FILE_PATH = './resources/LICENSE.example';
@@ -46,14 +48,14 @@ class ErrorMessage {
   }
 
   toString() {
-    return `${this._checker} Error:
+    return colors.red(`${this._checker} Error:
             \t${this._message}
             \tin ${this._file}
-            \tat ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`);
+            \tat ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`));
   }
 
   toShortString() {
-    return `${this._checker} Error in ${this._file} at ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`);
+    return colors.blue(`${this._checker} Error in ${this._file} at ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`));
   }
 }
 

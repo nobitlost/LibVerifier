@@ -92,12 +92,6 @@ class Verifier {
     });
   }
 
-
-  /**
-   *
-   */
-
-
   /**
    * @param link link to git repo
    * @return {Promise}
