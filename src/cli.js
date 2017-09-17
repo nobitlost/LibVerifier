@@ -55,5 +55,5 @@ const verifier = new Verifier(excludeFile);
 verifier.branch = branch;
 verifier.local = local;
 verifier.verify(checkedUrl).then(result => {
-  console.log(result);
+  if (!result) process.exit(1);
 });

@@ -28,6 +28,7 @@ const gitCloneOrPull = require('git-clone-or-pull');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
+const colors = require('colors/safe');
 
 const LicenseChecker = require('./Checkers/LicenseChecker');
 const AbstractChecker = require('./Checkers/AbstractChecker');
@@ -81,15 +82,25 @@ class Verifier {
         }
       });
 
-      if (!verified) this.logger.error('2) Detailed errors:');
-
-      checkersErrors.forEach((listOfCheckerErr) => {
-        listOfCheckerErr.forEach((error) => {
-          this.logger.error(error.toString());
-        });
-      });
-      return verified;
+      return this._createResponse(verified, checkersErrors);
     });
+  }
+
+  _createResponse(verified, checkersErrors) {
+    if (verified) {
+      this.logger.info(colors.green('Checks PASSED'));
+      return false;
+    }
+
+    this.logger.error('2) Detailed errors:');
+
+    checkersErrors.forEach((listOfCheckerErr) => {
+      listOfCheckerErr.forEach((error) => {
+        this.logger.error(error.toString());
+      });
+    });
+    this.logger.error(colors.red('Checks FAILED'));
+    return true;
   }
 
   /**

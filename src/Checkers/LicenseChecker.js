@@ -48,14 +48,14 @@ class ErrorMessage {
   }
 
   toString() {
-    return colors.red(`${this._checker} Error:
-            \t${this._message}
-            \tin ${this._file}
-            \tat ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`));
+    return colors.red(`${this._checker} Error:`) + '\n' +
+            `\t${this._message}` + '\n' +
+            colors.red('\tin ') +  this._file + '\n' +
+            colors.red('\tat ') + `${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`);
   }
 
   toShortString() {
-    return colors.blue(`${this._checker} Error in ${this._file} at ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`));
+    return colors.blue(`${this._checker} Error in `) + this._file + colors.blue(` at ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`));
   }
 }
 
@@ -213,7 +213,8 @@ class LicenseChecker extends checker {
     }
 
     if (originalToken.token !== checkedToken.token) {
-      const message = `Unexpected token "${checkedToken.token}", expected "${originalToken.token}" `;
+      const message = colors.red('Unexpected token "') + checkedToken.token + colors.red('", expected "')
+                      + originalToken.token + colors.red('"');
       return {
         message: message,
         lineNum: checkedToken.lineNum,
