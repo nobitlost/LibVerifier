@@ -1,7 +1,7 @@
 {
   "name": "lib-verifier",
   "version": "0.0.1",
-  "description": "A tool for 3'd party libra\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[C\u001b[C Eleс\u001b[2~с�е�ctric imp tool for 3'd party libary validation",
+  "description": "Electric Imp tool for 3'd party library validation",
   "main": "index.js",
   "scripts": {
     "test": "node node_modules/jasmine/bin/jasmine.js"
@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/nobitlost/LibVerifier#readme",
   "dependencies": {
+    "colors": "^1.1.2",
     "commander": "^2.11.0",
     "git-clone-or-pull": "^2.2.0"
   },

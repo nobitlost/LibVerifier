@@ -51,6 +51,12 @@ if (!process.argv.slice(2).length) {
   program.outputHelp();
   return;
 }
+
+if (checkedUrl === '') {
+  console.log('Github path is not specified');
+  return;
+}
+
 const verifier = new Verifier(excludeFile);
 verifier.branch = branch;
 verifier.local = local;
