@@ -7,7 +7,7 @@ You need to have `npm` installed.
 2. Run `npm install`
 
 ## Usage
-Run `src/cli.js [options] <github-path>` to check, if all files in `<github-path>` can pass all checks.
+Run `src/cli.js [options] <github-path>` to validate all files in `<github-path>`.
 
 ```
 Options:
@@ -20,7 +20,7 @@ Options:
 ## Exclude
 You can specify your own exclude file with `--exclude-file` option.
 
-Exclude file is **JSON**, that contains Checker names and arrays, with wildcard patterns, that current checker will ignore. 
+Exclude file is **JSON**, that contains Checker names as fields. Each checker corresponds to array, that contains wildcards of filenames, which current checker will ignore. 
 For example:
 ```
 {
