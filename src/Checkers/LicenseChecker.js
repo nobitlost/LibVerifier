@@ -121,8 +121,8 @@ class LicenseChecker extends checker {
 
   /**
    * Skips all lines that start with '#' and contain only white space characters.
-   * Increments the _lineNum counter as necessary.
    * @private
+   * @return {Integer} position
    */
   _skipToLicenseHeader(text) {
     let pos = 0;
@@ -140,6 +140,11 @@ class LicenseChecker extends checker {
     return pos;
   }
 
+  /**
+   * Skips to the next line.
+   * @private
+   * @return {integer} position
+   */
   _skipToNextLine(text, pos) {
     while (pos < text.length && text[pos] != '\n') {
       pos++;
@@ -173,7 +178,7 @@ class LicenseChecker extends checker {
 
   /**
    * Check path for License mistakes
-   * @param {string} path
+   * @param {String} path
    * @return {[ErrorMessage]}
    */
   check(dirpath) {
@@ -191,6 +196,12 @@ class LicenseChecker extends checker {
     return errors.filter((error) => error != false);
   }
 
+  /**
+   * Check path for License mistakes
+   * @param {String} filepath path to file
+   * @param {Boolean} isCode mark, should we skip comments and headers
+   * @return {ErrorMessage}
+   */
   _compareWithLicense(filepath, isCode) {
     const checkedLicense = fs.readFileSync(filepath, 'utf-8').replace(/\d\d\d\d(\-\d\d\d\d)?/, '');
 
@@ -200,6 +211,14 @@ class LicenseChecker extends checker {
     return output ? new ErrorMessage(output.message, output.lineNum, filepath, 'LicenseChecker', output.linePos) : output;
   }
 
+  /**
+   * Compare two licenses for equality
+   *
+   * @param {String} checkedText text of license or code
+   * @param {String} originalText original license
+   * @param {Boolean} isCode mark, should we skip comments and headers in checkedText
+   * @return {false | MessageJson} false if licenses are equal, message with differs otherwise
+   */
   _compareTwoLicenseTexts(checkedText, originalText, isCode) {
     const testedGen = this._tokensIterator(checkedText, isCode);
     const goldenGen = this._tokensIterator(originalText, false);
