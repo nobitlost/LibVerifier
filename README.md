@@ -33,7 +33,3 @@ This exclude `node_modules` and `test` files from the check.
 
 ## Workflow
 **LibVerifier** run all checkers on test folder. When all checks are done all failed cases will be written in console.
-
-
-
-
