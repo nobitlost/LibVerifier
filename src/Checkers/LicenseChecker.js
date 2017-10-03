@@ -236,8 +236,16 @@ class LicenseChecker extends checker {
     }
 
     if (goldenToken.token !== testedToken.token) {
-      const message = colors.red('Unexpected token "') + testedToken.token + colors.red('", expected "')
-                      + goldenToken.token + colors.red('"');
+      let message;
+      if (testedToken.token == TOKENS.END) {
+        message = colors.red('Unexpected end of license.')+ colors.red(' Expected token "')
+                  + goldenToken.token
+                  + colors.red('". The License text shouldn\'t be separated and should precede any other statements in the file (except for shebang).');
+      } else {
+        message = colors.red('Unexpected token "') + testedToken.token + colors.red('", expected "')
+                  + goldenToken.token + colors.red('"');
+      }
+
       return {
         message: message,
         lineNum: testedToken.lineNum,

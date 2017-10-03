@@ -31,7 +31,7 @@ let checkedFolder = '';
 let excludeFile = null;
 
 program
-.version('0.0.1')
+.version('0.0.1', '-v, --version')
 .arguments('<path>')
 .action(function (path) {
   checkedFolder = path;

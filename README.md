@@ -3,14 +3,15 @@ Electric Imp tool for 3'd party library validation.
 
 ## Installation 
 You need to have `npm` installed.
-1. Clone repo to your filesystem and change to it
+1. Clone repo to your filesystem and change to it: `git clone https://github.com/nobitlost/LibVerifier.git LibVerifier; cd LibVerifier`
 2. Run `npm install`
 
 ## Usage
-Run `src/cli.js [options] <path>` to validate all files in `<path>`.
+Run `node src/cli.js [options] <path>` to validate all files in `<path>`.
 
 ```
 Options:
+ -v, --version    Output the version number.
  -h, --help       Show help.
  --exclude-file   Specify file, that contains excludes.   [string]
 ```
@@ -33,3 +34,7 @@ This exclude `node_modules` and `test` files from the check.
 
 ## Workflow
 **LibVerifier** run all checkers on test folder. When all checks are done all failed cases will be written in console.
+
+## License
+
+MessageManager is licensed under the [MIT License](./LICENSE).

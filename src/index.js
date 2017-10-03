@@ -60,7 +60,7 @@ class Verifier {
    */
   verify(folderpath) {
 
-    const absolutePath = path.resolve(folderpath); // needs for excludes
+    const absolutePath = path.resolve(folderpath); // needs for correct excludes
     if (!fs.existsSync(absolutePath)) {
       throw new Error('Path does not exist');
     }
