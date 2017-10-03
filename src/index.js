@@ -24,10 +24,8 @@
 
 'use strict';
 
-const gitCloneOrPull = require('git-clone-or-pull');
-const path = require('path');
 const fs = require('fs');
-const url = require('url');
+const path = require('path');
 const colors = require('colors/safe');
 
 const LicenseChecker = require('./Checkers/LicenseChecker');
@@ -39,9 +37,6 @@ const DEFAULT_EXCLUDE = '../excludes.json';
 class Verifier {
 
   constructor(excludeFile = null) {
-    this._local = false;
-    this._branch = '';
-
     if (excludeFile === null) {
       this.excludeFile = DEFAULT_EXCLUDE;
     } else {
@@ -60,29 +55,33 @@ class Verifier {
   }
 
   /**
-   * @param link link to git repo
+   * @param folderpath folder, where project is placed
    * @return {Promise}
    */
-  verify(link) {
-    return this._getRepo(link).then(path => {
-      const checkersErrors = [];
-      let verified = true;
+  verify(folderpath) {
 
-      this.checkers.forEach((checker) => {
-        const errors = checker.check(path);
-        if (errors.length != 0) {
-          checkersErrors.push(errors);
-          errors.forEach((error) => {
-            if (verified) this.logger.error('1) All files with errors:');
-            this.logger.error(error.toShortString());
-            // prepare to print short error messages
-            verified = false;
-          });
-        }
-      });
+    const absolutePath = path.resolve(folderpath); // needs for excludes
+    if (!fs.existsSync(absolutePath)) {
+      throw new Error('Path does not exist');
+    }
+    const checkersErrors = [];
+    let verified = true;
 
-      return this._createResponse(verified, checkersErrors);
+    this.checkers.forEach((checker) => {
+      const errors = checker.check(absolutePath);
+      if (errors.length != 0) {
+        checkersErrors.push(errors);
+        errors.forEach((error) => {
+          if (verified) this.logger.error('1) All files with errors:');
+          this.logger.error(error.toShortString());
+          // prepare to print short error messages
+          verified = false;
+        });
+      }
     });
+
+    return this._createResponse(verified, checkersErrors);
+
   }
 
   _createResponse(verified, checkersErrors) {
@@ -100,38 +99,6 @@ class Verifier {
     });
     this.logger.error(colors.red('Checks FAILED'));
     return true;
-  }
-
-  /**
-   * @param link link to git repo
-   * @private
-   * @return {Promise}
-   */
-  _getRepo(link) {
-    const name = this._getLocalPath(link);
-    if (this.local && fs.existsSync(name)) {
-      return Promise.resolve(name);
-    }
-    return new Promise((resolve, reject) => {
-      const options = {};
-      options.path = path.join(process.cwd(), name);
-      options.branch = this._branch;
-      gitCloneOrPull(link, options, err => {
-        if (err) reject(err);
-        resolve(name);
-      });
-    });
-  }
-
-  /**
-   * @param link link to git repo
-   * @private
-   * @return {String} name of local folder
-   */
-  _getLocalPath(link) {
-    const parsedUrl = url.parse(link);
-    return parsedUrl.pathname.substring(1).replace(/\./g, '_').replace(/\//g, '_');
-    // need more detailed replace or another way to generate path
   }
 
   /**
@@ -153,21 +120,6 @@ class Verifier {
     this._logger = value;
   }
 
-  get local() {
-    return this._local;
-  }
-
-  set local(value) {
-    this._local = value;
-  }
-
-  get branch() {
-    return this._branch;
-  }
-
-  set branch(value) {
-    this._branch = value;
-  }
   get exclude() {
     return this._exclude;
   }

@@ -7,13 +7,11 @@ You need to have `npm` installed.
 2. Run `npm install`
 
 ## Usage
-Run `src/cli.js [options] <github-path>` to validate all files in `<github-path>`.
+Run `src/cli.js [options] <path>` to validate all files in `<path>`.
 
 ```
 Options:
  -h, --help       Show help.
- -l, --local      Don't pull before every run. 
- -b, --branch     Use another branch.                     [string]
  --exclude-file   Specify file, that contains excludes.   [string]
 ```
 
@@ -34,10 +32,8 @@ For example:
 This exclude `node_modules` and `test` files from the check.
 
 ## Workflow
-For the first run **LibVerifier** clone specified repository to the folder, whose name depends on the name of the repository. When all checks are done all failed cases will be written in console.
+**LibVerifier** run all checkers on test folder. When all checks are done all failed cases will be written in console.
 
-
-**Note:** LibVerifier will pull repo before every run without `--local` option
 
 
 
