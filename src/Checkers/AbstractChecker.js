@@ -32,6 +32,7 @@ class AbstractChecker {
    * @return {[CheckerWarning]}
    */
   check(path) {
+    throw new Error('Unimplemented abstract method check(path)');
   }
 
   /**

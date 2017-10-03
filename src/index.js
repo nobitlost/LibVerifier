@@ -31,7 +31,6 @@ const url = require('url');
 const colors = require('colors/safe');
 
 const LicenseChecker = require('./Checkers/LicenseChecker');
-const AbstractChecker = require('./Checkers/AbstractChecker');
 const DEFAULT_EXCLUDE = '../excludes.json';
 
 /**
@@ -105,6 +104,7 @@ class Verifier {
 
   /**
    * @param link link to git repo
+   * @private
    * @return {Promise}
    */
   _getRepo(link) {
@@ -125,6 +125,7 @@ class Verifier {
 
   /**
    * @param link link to git repo
+   * @private
    * @return {String} name of local folder
    */
   _getLocalPath(link) {

@@ -67,19 +67,20 @@ class LicenseChecker extends checker {
     this._extensionsSet = new Set(['.js', '.nut']);
   }
 
-
   /**
-   * Retrieves the next token (word from the file)
+   * Retrieves a next token (word) from the specified text
    * @param text to parse
-   * @param {Boolean} isCode defines, have license comments in License
+   * @param {Boolean} parseSourceComments true if the license text
+   * is supposed to be commented out (source file header) or uncommented (LICENSE file)
+   * @private
    * @return the next token or null, if eof reached
    */
-  *_tokensIterator(text, isCode) {
+  *_tokensIterator(text, parseSourceComments) {
     let pos = 0; // Current global position in the file
     let lineNum = 1;  // Current line number
     let linePos = 0; // Current position in the line
     let res;
-    if (isCode) {
+    if (parseSourceComments) {
       pos = this._skipToLicenseHeader(text);
       pos = this._skipToTextInComments(text, pos);
       if (pos === null) {
@@ -94,7 +95,7 @@ class LicenseChecker extends checker {
         if (c === '\n') {
           lineNum++;
           linePos = pos;
-          if (isCode)  {
+          if (parseSourceComments)  {
             pos = this._skipToTextInComments(text, pos + 1);
             if (pos === null) {
               if (res !== null) {
@@ -163,7 +164,6 @@ class LicenseChecker extends checker {
 
   /**
    * Skips to the text after the single line comments ("//") starting from _pos.
-   *
    * @private
    * @return offset from the current position (_pos) to the commented text or null if no comments found.
    */
@@ -199,45 +199,49 @@ class LicenseChecker extends checker {
   /**
    * Check path for License mistakes
    * @param {String} filepath path to file
-   * @param {Boolean} isCode mark, should we skip comments and headers
+   * @param {Boolean} parseSourceComments true if the license text
+   * is supposed to be commented out (source file header) or uncommented (LICENSE file)
+   * @private
    * @return {ErrorMessage}
    */
-  _compareWithLicense(filepath, isCode) {
-    const checkedLicense = fs.readFileSync(filepath, 'utf-8').replace(/\d\d\d\d(\-\d\d\d\d)?/, '');
+  _compareWithLicense(filepath, parseSourceComments) {
+    const yearRegexp = /\d\d\d\d(\-\d\d\d\d)?/;
+    const testedLicense = fs.readFileSync(filepath, 'utf-8').replace(yearRegexp, '');
+    const goldenLicense = fs.readFileSync(LICENSE_FILE_PATH, 'utf-8');
 
-    const originalLicense = fs.readFileSync(LICENSE_FILE_PATH, 'utf-8');
-
-    const output = this._compareTwoLicenseTexts(checkedLicense, originalLicense, isCode);
+    const output = this._compareTwoLicenseTexts(testedLicense, goldenLicense, parseSourceComments);
     return output ? new ErrorMessage(output.message, output.lineNum, filepath, 'LicenseChecker', output.linePos) : output;
   }
 
   /**
    * Compare two licenses for equality
    *
-   * @param {String} checkedText text of license or code
-   * @param {String} originalText original license
-   * @param {Boolean} isCode mark, should we skip comments and headers in checkedText
+   * @param {String} testedText text of license or code
+   * @param {String} goldenText original license
+   * @param {Boolean} parseSourceComments true if the license text
+   * is supposed to be commented out (source file header) or uncommented (LICENSE file)
+   * @private
    * @return {false | MessageJson} false if licenses are equal, message with differs otherwise
    */
-  _compareTwoLicenseTexts(checkedText, originalText, isCode) {
-    const testedGen = this._tokensIterator(checkedText, isCode);
-    const goldenGen = this._tokensIterator(originalText, false);
+  _compareTwoLicenseTexts(testedText, goldenText, parseSourceComments) {
+    const testedGen = this._tokensIterator(testedText, parseSourceComments);
+    const goldenGen = this._tokensIterator(goldenText, false);
 
-    let checkedToken = testedGen.next().value;
-    let originalToken = goldenGen.next().value;
-    while ((originalToken.token === checkedToken.token)
-           && (checkedToken.token != TOKENS.END) && (originalToken.token != TOKENS.END)) {
-      checkedToken = testedGen.next().value;
-      originalToken = goldenGen.next().value;
+    let testedToken = testedGen.next().value;
+    let goldenToken = goldenGen.next().value;
+    while ((goldenToken.token === testedToken.token)
+           && (testedToken.token != TOKENS.END) && (goldenToken.token != TOKENS.END)) {
+      testedToken = testedGen.next().value;
+      goldenToken = goldenGen.next().value;
     }
 
-    if (originalToken.token !== checkedToken.token) {
-      const message = colors.red('Unexpected token "') + checkedToken.token + colors.red('", expected "')
-                      + originalToken.token + colors.red('"');
+    if (goldenToken.token !== testedToken.token) {
+      const message = colors.red('Unexpected token "') + testedToken.token + colors.red('", expected "')
+                      + goldenToken.token + colors.red('"');
       return {
         message: message,
-        lineNum: checkedToken.lineNum,
-        linePos: checkedToken.linePos
+        lineNum: testedToken.lineNum,
+        linePos: testedToken.linePos
       };
     }
     return false;
