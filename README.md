@@ -1,6 +1,6 @@
 # LibVerifier
 
-Electric Imp tool for 3'd party library validation.
+Electric Imp tool for 3'd party library verification.
 
 ## Installation 
 
