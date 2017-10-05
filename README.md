@@ -1,26 +1,43 @@
 # LibVerifier
+
 Electric Imp tool for 3'd party library validation.
 
 ## Installation 
-You need to have `npm` installed.
-1. Clone repo to your filesystem and change to it: `git clone https://github.com/nobitlost/LibVerifier.git LibVerifier; cd LibVerifier`
+
+To use the tool you need to have [npm](https://www.npmjs.com/get-npm) installed.
+
+1. Clone repo to your filesystem and change to it: 
+```
+git clone https://github.com/nobitlost/LibVerifier.git LibVerifier; cd LibVerifier
+```
 2. Run `npm install`
 
 ## Usage
-Run `node src/cli.js [options] <path>` to validate all files in `<path>`.
+
+To run check a project located at the `<path>` specified, use the command:  
+```
+node src/cli.js [options] <path>
+``` 
+where options are: 
 
 ```
-Options:
- -v, --version    Output the version number.
- -h, --help       Show help.
- --exclude-file   Specify file, that contains excludes.   [string]
+ --exclude-file <path-to-exclude-file>   Specifies the exclude list
+ -v, --version                           Prints the tool version
+ -h, --help                              Prints this help message
 ```
 
 ## Exclude
-You can specify your own exclude file with `--exclude-file` option.
 
-Exclude file is **JSON**, that contains Checker names as fields. Each checker corresponds to array, that contains wildcards of filenames, which current checker will ignore. 
-For example:
+You can specify a file with exclude list by using the `--exclude-file` option.
+
+Exclude file is JSON document, that contains a list of exclude rules for each of the Checkers
+(only `LicenseChecker` checker is supported in this version). Wildcards are supported for
+exclude entry values.
+
+**Example**
+
+Exclude files from the `node_modules`, `test*` and `spec` directories and subdirectories:
+
 ```
 {
   "LicenseChecker" : [
@@ -30,11 +47,12 @@ For example:
   ]
 }
 ```
-This exclude `node_modules` and `test` files from the check.
 
-## Workflow
-**LibVerifier** run all checkers on test folder. When all checks are done all failed cases will be written in console.
+## How it works
+
+`LibVerifier` runs all the defiled checkers in specified folder. When all the checks are done
+test results are printed in the console.
 
 ## License
 
-MessageManager is licensed under the [MIT License](./LICENSE).
+The tool is distributed under the [MIT License](./LICENSE).
