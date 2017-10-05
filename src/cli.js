@@ -31,22 +31,24 @@ let checkedFolder = '';
 let excludeFile = null;
 
 program
-.version('0.0.1', '-v, --version')
-.arguments('<path>')
-.action(function (path) {
-  checkedFolder = path;
-})
-.option('--exclude-file <file>', 'specify file with exclude list', (file) => { excludeFile = file;})
-.parse(process.argv);
+    .version('0.0.1', '-v, --version')
+    .arguments('<path>')
+    .action(function (path) {
+        checkedFolder = path;
+    })
+    .option('--exclude-file <file>', 'specify file with exclude list', (file) => {
+        excludeFile = file;
+    })
+    .parse(process.argv);
 
 if (!process.argv.slice(2).length) {
-  program.outputHelp();
-  return;
+    program.outputHelp();
+    return;
 }
 
 if (checkedFolder === '') {
-  console.log('Path is not specified');
-  return;
+    console.log('Path is not specified');
+    return;
 }
 
 const verifier = new Verifier(excludeFile);

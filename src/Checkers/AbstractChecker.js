@@ -26,33 +26,33 @@
 
 class AbstractChecker {
 
-  /**
-   * Check path
-   * @param {string} path
-   * @return {[CheckerWarning]}
-   */
-  check(path) {
-    throw new Error('Unimplemented abstract method check(path)');
-  }
+    /**
+     * Check path
+     * @param {string} path
+     * @return {[CheckerWarning]}
+     */
+    check(path) {
+        throw new Error('Unimplemented abstract method check(path)');
+    }
 
-  /**
-   * @return {{debug(),info(),warning(),error()}}
-   */
-  get logger() {
-    return this._logger || {
-      debug: console.log,
-      info: console.info,
-      warning: console.warning,
-      error: console.error
-    };
-  }
+    /**
+     * @return {{debug(),info(),warning(),error()}}
+     */
+    get logger() {
+        return this._logger || {
+            debug: console.log,
+            info: console.info,
+            warning: console.warning,
+            error: console.error
+        };
+    }
 
-  /**
-   * @param {{debug(),info(),warning(),error()}} value
-   */
-  set logger(value) {
-    this._logger = value;
-  }
+    /**
+     * @param {{debug(),info(),warning(),error()}} value
+     */
+    set logger(value) {
+        this._logger = value;
+    }
 }
 
 module.exports = AbstractChecker;
