@@ -36,7 +36,7 @@ program
 .action(function (path) {
   checkedFolder = path;
 })
-.option('--exclude-file <file>', 'Specify exclude file', (file) => { excludeFile = file;})
+.option('--exclude-file <file>', 'specify file with exclude list', (file) => { excludeFile = file;})
 .parse(process.argv);
 
 if (!process.argv.slice(2).length) {

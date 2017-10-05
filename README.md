@@ -21,9 +21,9 @@ node src/cli.js [options] <path>
 where options are: 
 
 ```
- --exclude-file <path-to-exclude-file>   Specifies the exclude list
- -v, --version                           Prints the tool version
- -h, --help                              Prints this help message
+-v, --version          output the version number
+--exclude-file <file>  specify file with exclude list
+-h, --help             output usage information
 ```
 
 ## Exclude
