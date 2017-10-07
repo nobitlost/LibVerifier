@@ -56,13 +56,13 @@ class Verifier {
 
   /**
    * @param folderpath folder, where project is placed
-   * @return {Promise}
+   * @return {Boolean}
    */
   verify(folderpath) {
-
     const absolutePath = path.resolve(folderpath); // needs for correct excludes
     if (!fs.existsSync(absolutePath)) {
-      throw new Error('Path does not exist');
+      this.logger.error('Path does not exist');
+      return false;
     }
     const checkersErrors = [];
     let verified = true;

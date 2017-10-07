@@ -64,7 +64,7 @@ class LicenseChecker extends checker {
   constructor(exclude = null) {
     super();
     this.excludeList = exclude;
-    this._extensionsSet = new Set(['.js', '.nut']);
+    this._extensionSet = new Set(['.js', '.nut']);
   }
 
   /**
@@ -187,7 +187,7 @@ class LicenseChecker extends checker {
     errors.push(false); // reserved for LICENSE error
     for (const file of allFiles) {
       const parsedPath = path.parse(file);
-      if (this._extensionsSet.has(parsedPath.ext)) {
+      if (this._extensionSet.has(parsedPath.ext)) {
         errors.push(this._compareWithLicense(file, true));
       } else if (parsedPath.name === 'LICENSE') {
         errors[0] = this._compareWithLicense(file, false); // assign to reserved place
@@ -206,11 +206,30 @@ class LicenseChecker extends checker {
    */
   _compareWithLicense(filepath, parseSourceComments) {
     const yearRegexp = /\d\d\d\d(\-\d\d\d\d)?/;
-    const testedLicense = fs.readFileSync(filepath, 'utf-8').replace(yearRegexp, '');
+    
+    let testedLicense = fs.readFileSync(filepath, 'utf-8');
+    testedLicense = this._delete3dPartyCopyright(testedLicense).replace(yearRegexp, '');
     const goldenLicense = fs.readFileSync(LICENSE_FILE_PATH, 'utf-8');
 
     const output = this._compareTwoLicenseTexts(testedLicense, goldenLicense, parseSourceComments);
     return output ? new ErrorMessage(output.message, output.lineNum, filepath, 'LicenseChecker', output.linePos) : output;
+  }
+
+  /**
+   * Delete third-party copyright in license
+   * @param {String} license text of license
+   * @private
+   * @return {String} new license
+   */
+  _delete3dPartyCopyright(license) {
+    /* regexp match example:
+     * "// Copyright 2017 company name\n"
+     * "Copyright 2016 companyName\r\n"
+     */
+    const copyrightStringRegexp = /(\/\/\s)?Copyright\s\d\d\d\d(\-\d\d\d\d)?\s(.*)(\r)?\n/g;
+    return license.replace(copyrightStringRegexp, (str, p1, p2, p3) => {
+      return p3 === 'Electric Imp' ? str : '';
+    });
   }
 
   /**
@@ -238,11 +257,11 @@ class LicenseChecker extends checker {
     if (goldenToken.token !== testedToken.token) {
       let message;
       if (testedToken.token == TOKENS.END) {
-        message = colors.red('Unexpected end of license.')+ colors.red(' Expected token "')
+        message = colors.red('Unexpected end of license instead of "')
                   + goldenToken.token
-                  + colors.red('". The License text shouldn\'t be separated and should precede any other statements in the file (except for shebang).');
+                  + colors.red('". The License text should precede any other statements in the file (except for shebang).');
       } else {
-        message = colors.red('Unexpected token "') + testedToken.token + colors.red('", expected "')
+        message = colors.red('Unexpected token "') + testedToken.token + colors.red('" instead of "')
                   + goldenToken.token + colors.red('"');
       }
 
@@ -295,16 +314,16 @@ class LicenseChecker extends checker {
     this._excludeList = patterns;
   }
 
-  get extensionsSet() {
-    return this._extensionsSet;
+  get extensionSet() {
+    return this._extensionSet;
   }
 
   /**
    * @param {Set} set of extensions with leading dot
    */
-  set extensionsSet(set) {
+  set extensionSet(set) {
     if (set instanceof Set) {
-      this._extensionsSet = set;
+      this._extensionSet = set;
     } else {
       this.logger.error('Wrong argument type');
     }

@@ -1,6 +1,8 @@
 // MIT License
 //
-// Copyright 2017 Electric Imp
+// Copyright 2015 Richard Moore
+// Copyright 2016 KISI Inc.
+// Copyright 2017 Electricity Inc
 //
 // SPDX-License-Identifier: MIT
 //
@@ -21,34 +23,3 @@
 // OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
-
-'use strict';
-
-const program = require('commander');
-const Verifier = require('./index.js');
-let checkedFolder = '';
-
-let excludeFile = null;
-
-program
-.version('0.0.1', '-v, --version')
-.arguments('<path>')
-.action(function (path) {
-  checkedFolder = path;
-})
-.option('--exclude-file <file>', 'specify file with exclude list', (file) => { excludeFile = file;})
-.parse(process.argv);
-
-if (process.argv.length < 3) {
-  program.outputHelp();
-  return;
-}
-
-if (checkedFolder === '') {
-  console.log('Path is not specified');
-  return;
-}
-
-const verifier = new Verifier(excludeFile);
-const result = verifier.verify(checkedFolder);
-if (!result) process.exit(1);
