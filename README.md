@@ -1,6 +1,11 @@
 # LibVerifier
 
-Electric Imp tool for 3'd party library verification.
+Tool is designed to simplify and automate validation process for Electric Imp libraries and integrations submitted for review by 3d parties. The goal is to formalize and automate the manual work that needs to be done to make sure that libraries in question conform to [Third-Party Library Submission Guidelines](https://electricimp.com/docs/libraries/submissions/): coding style, license file and source file copyright headers formats, tests and examples verification.
+
+## Rules
+There are rules, that should be checked by LibVerifier. The list of rules with checker which verify them respectively is presented below.
+
+1) LicenseChecker - All the source files in JavaScript and Squirrel languages have proper license headers and the LICENSE file exists and is correct.
 
 ## Installation 
 
