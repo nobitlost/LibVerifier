@@ -91,7 +91,6 @@ class LicenseChecker extends checker {
             res = null;
             for (; pos < text.length; pos++) {
                 const c = text[pos];
-
                 if (c === '\n') {
                     lineNum++;
                     linePos = pos;
@@ -105,16 +104,12 @@ class LicenseChecker extends checker {
                         }
                     }
                 }
-
                 if (/\s/.test(c)) {
                     if (!res) continue; else break;
                 }
-
                 res = res ? res + c : '' + c;
             }
-
             if (res === null) break; // for cases when \n is the last sym
-
             yield this._createJsonResponse(res, lineNum, linePos, pos);
         }
         return this._createJsonResponse(TOKENS.END, lineNum, linePos, pos);
