@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // MIT License
 //
 // Copyright 2017 Electric Imp

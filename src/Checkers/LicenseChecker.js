@@ -38,7 +38,6 @@ const TOKENS = {
 };
 
 class ErrorMessage {
-
     constructor(message, lineNum, file, checker, linePos = -1) {
         this._line = lineNum;
         this._linePos = linePos;
@@ -60,7 +59,6 @@ class ErrorMessage {
 }
 
 class LicenseChecker extends checker {
-
     constructor(exclude = null) {
         super();
         this.excludeList = exclude;
@@ -221,7 +219,7 @@ class LicenseChecker extends checker {
          * "// Copyright 2017 company name\n"
          * "Copyright 2016 companyName\r\n"
          */
-        const copyrightStringRegexp = /(\/\/\s)?Copyright\s\d\d\d\d(\-\d\d\d\d)?\s(.*)(\r)?\n/g;
+        const copyrightStringRegexp = /(\/\/\s?)?Copyright\s+\d\d\d\d(\-\d\d\d\d)?\s+(.*)(\r)?\n/g;
         return license.replace(copyrightStringRegexp, (str, p1, p2, p3) => {
                 return p3 === 'Electric Imp' ? str : '';
         });

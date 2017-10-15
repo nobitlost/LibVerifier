@@ -3,7 +3,8 @@
     "**/node_modules",
     "**/.git",
     "**/resources/**",
-    "**/test*/**",
-    "**/spec/**"
+    "#**/test*/**",
+    "**/spec/**",
+    "#**/LICENSE"
   ]
 }

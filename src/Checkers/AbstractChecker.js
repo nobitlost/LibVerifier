@@ -25,7 +25,6 @@
 'use strict';
 
 class AbstractChecker {
-
     /**
      * Check path
      * @param {string} path

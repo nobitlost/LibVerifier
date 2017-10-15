@@ -22,13 +22,11 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-'use strict';
+class HelloWorld {
 
-const gitCloneOrPull = require('git-clone-or-pull');
-const path = require('path');
-const fs = require('fs');
-const url = require('url');
-
-const LicenseChecker = require('./Checkers/LicenseChecker');
-const AbstractChecker = require('./Checkers/AbstractChecker');
-const DEFAULT_EXCLUDE = '../excludes.json';
+  /**
+   * hello, world
+   */
+  hello(name) {
+  }
+}

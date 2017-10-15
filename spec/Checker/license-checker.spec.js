@@ -26,34 +26,66 @@
 
 
 const fs = require('fs');
+const path = require('path');
+const colors = require('colors/safe');
 
 const LicenseChecker = require('../../src/Checkers/LicenseChecker.js');
 
 
 describe('LicenseChecker', () => {
-  let licenseChecker;
-  const getFilesCount = function (dirPath) {
-    const files = fs.readdirSync(dirPath);
-    return files.length;
-  };
+    let licenseChecker;
+    let checkedFiles;
 
-  beforeEach(() => {
-    licenseChecker = new LicenseChecker();
-  });
+    const getFilesCount = function (dirPath) {
+        const files = fs.readdirSync(dirPath);
+        files.forEach((checkedFile) => {
+            checkedFiles.add(path.normalize(dirPath + path.sep + checkedFile));
+        });
+        return files.length;
+    };
 
-  it('should get ErrorMessages, when check wrong license', () => {
-    const pathWithWrongLics = './spec/fixtures/wrongLicenses';
-    const res = licenseChecker.check(pathWithWrongLics);
-    // all licenses in file with mistake
-    expect(res.length).toEqual(getFilesCount(pathWithWrongLics));
-    // console.log(res); // to check what is wrong
-  });
+    const printMessages = function (passedFiles, errors, isValid) {
+        const messageForPassed = isValid ? colors.green('[OK]') : colors.red('[ERROR]');
+        const messageForErrors = isValid ? colors.red('[ERROR]') : colors.green('[OK]');
+        passedFiles.forEach((file) => {
+            console.log(file + ' ' + messageForPassed);
+        });
+        errors.forEach((errorMessage) => {
+            if (errorMessage._file != null) {
+                console.log(path.normalize(errorMessage._file) + ' ' + messageForErrors);
+            } else {
+                console.log(`Can\'t find attribute "_file" in ${errorMessage}`);
+            }
+        });
+    };
 
-  it('shouldn\'t get ErrorMessages, when check right license', () => {
-    const pathWithRightLics = './spec/fixtures/rightLicenses';
-    const res = licenseChecker.check(pathWithRightLics);
-    // all licenses in file is correct
-    expect(res.length).toEqual(0);
-  });
+    beforeEach(() => {
+        licenseChecker = new LicenseChecker();
+        checkedFiles = new Set();
+    });
+
+    it('should get ErrorMessages, when check wrong license', () => {
+        const pathWithWrongLics = './spec/fixtures/wrongLicenses';
+        const res = licenseChecker.check(pathWithWrongLics);
+        // all licenses in file with mistake
+        expect(res.length).toEqual(getFilesCount(pathWithWrongLics));
+        res.forEach((error) => {
+            checkedFiles.delete(path.normalize(error._file));
+        });
+        printMessages(checkedFiles, res, false);
+        // console.log(res); // to check what is wrong
+    });
+
+    it('shouldn\'t get ErrorMessages, when check right license', () => {
+        const pathWithRightLics = './spec/fixtures/rightLicenses';
+        const res = licenseChecker.check(pathWithRightLics);
+        getFilesCount(pathWithRightLics);
+        res.forEach((error) => {
+            checkedFiles.delete(path.normalize(error._file));
+        });
+        // all licenses in file is correct
+        expect(res.length).toEqual(0);
+        printMessages(checkedFiles, res, true);
+    });
 
 });

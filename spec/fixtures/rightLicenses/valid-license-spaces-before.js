@@ -28,36 +28,11 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-'use strict';
-
-class AbstractChecker {
+class HelloWorld {
 
   /**
-   * Check path
-   * @param {string} path
-   * @return {[CheckerWarning]}
+   * hello, world
    */
-  check(path) {
-  }
-
-  /**
-   * @return {{debug(),info(),warning(),error()}}
-   */
-  get logger() {
-    return this._logger || {
-      debug: console.log,
-      info: console.info,
-      warning: console.warning,
-      error: console.error
-    };
-  }
-
-  /**
-   * @param {{debug(),info(),warning(),error()}} value
-   */
-  set logger(value) {
-    this._logger = value;
+  hello(name) {
   }
 }
-
-module.exports = AbstractChecker;
