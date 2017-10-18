@@ -198,10 +198,9 @@ class LicenseChecker extends checker {
      * @return {ErrorMessage}
      */
     _compareWithLicense(filepath, parseSourceComments) {
-        const yearRegexp = /\d\d\d\d(\-\d\d\d\d)?/;
 
         let testedLicense = fs.readFileSync(filepath, 'utf-8');
-        testedLicense = this._delete3dPartyCopyright(testedLicense).replace(yearRegexp, '');
+        testedLicense = this._delete3dPartyCopyright(testedLicense);
         const goldenLicense = fs.readFileSync(LICENSE_FILE_PATH, 'utf-8');
 
         const output = this._compareTwoLicenseTexts(testedLicense, goldenLicense, parseSourceComments);
@@ -219,10 +218,17 @@ class LicenseChecker extends checker {
          * "// Copyright 2017 company name\n"
          * "Copyright 2016 companyName\r\n"
          */
-        const copyrightStringRegexp = /(\/\/\s?)?Copyright\s+\d\d\d\d(\-\d\d\d\d)?\s+(.*)(\r)?\n/g;
-        return license.replace(copyrightStringRegexp, (str, p1, p2, p3) => {
-                return p3 === 'Electric Imp' ? str : '';
+        const copyrightStringRegexp = /((\/\/\s?)?Copyright)\s+\d\d\d\d(\-\d\d\d\d)?\s+(.*)(\r)?\n/g;
+        let hasCopyright = false;
+        const newLicense = license.replace(copyrightStringRegexp, (str, p1) => {
+            if (!hasCopyright) {
+                hasCopyright = true;
+                return p1 + '\n';
+            } else {
+                return '';
+            }
         });
+        return newLicense;
     }
 
     /**
