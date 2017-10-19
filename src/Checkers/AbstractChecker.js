@@ -28,7 +28,7 @@ class AbstractChecker {
     /**
      * Check path
      * @param {string} path
-     * @return {[CheckerWarning]}
+     * @return {[ErrorMessage]}
      */
     check(path) {
         throw new Error('Unimplemented abstract method check(path)');

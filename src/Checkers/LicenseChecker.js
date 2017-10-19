@@ -137,7 +137,7 @@ class LicenseChecker extends checker {
     /**
      * Skips to the next line.
      * @private
-     * @return {integer} position
+     * @return {Integer} position
      */
     _skipToNextLine(text, pos) {
         while (pos < text.length && text[pos] != '\n') {
@@ -171,7 +171,7 @@ class LicenseChecker extends checker {
 
     /**
      * Check path for License mistakes
-     * @param {String} path
+     * @param {String} dirpath
      * @return {[ErrorMessage]}
      */
     check(dirpath) {
@@ -239,7 +239,7 @@ class LicenseChecker extends checker {
      * @param {Boolean} parseSourceComments true if the license text
      * is supposed to be commented out (source file header) or uncommented (LICENSE file)
      * @private
-     * @return {false | MessageJson} false if licenses are equal, message with differs otherwise
+     * @return {Boolean | JSON} false if licenses are equal, message with differs otherwise
      */
     _compareTwoLicenseTexts(testedText, goldenText, parseSourceComments) {
         const testedGen = this._tokensIterator(testedText, parseSourceComments);
@@ -293,6 +293,10 @@ class LicenseChecker extends checker {
         return allFiles;
     }
 
+    /**
+     * Regexp list for exclude
+     * @return {Array} return regexp lis
+     */
     get excludeList() {
         return this._excludeList;
     }
@@ -313,6 +317,9 @@ class LicenseChecker extends checker {
             .map((value) => minimatch.makeRe(value));
     }
 
+    /**
+     * @return {Set} set of extensions with leading dot
+     */
     get extensionSet() {
         return this._extensionSet;
     }
