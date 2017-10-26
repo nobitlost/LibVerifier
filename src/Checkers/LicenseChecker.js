@@ -30,6 +30,7 @@ const minimatch = require('minimatch');
 const colors = require('colors/safe');
 
 const checker = require('./AbstractChecker');
+const buildMessage = require('./utils').buildMessage;
 
 const LICENSE_FILE_PATH = './resources/LICENSE.example';
 
@@ -38,23 +39,34 @@ const TOKENS = {
 };
 
 class ErrorMessage {
+
     constructor(message, lineNum, file, checker, linePos = -1) {
         this._line = lineNum;
         this._linePos = linePos;
         this._message = message;
         this._file = file;
         this._checker = checker;
+        this.SHORT_ERROR_STRING = '$checker Error in $file at $line$pos';
+        this.ERROR_STRING = '$checker Error: \n\t $message\n\tin $file\n\tat $line$pos';
     }
 
     toString() {
-        return colors.red(`${this._checker} Error:`) + '\n' +
-            `\t${this._message}` + '\n' +
-            colors.red('\tin ') + this._file + '\n' +
-            colors.red('\tat ') + `${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`);
+        const substitutes = [['$checker', this._checker, 'red'], ['$file', this._file, 'white'],
+                       ['$message', this._message, 'white'], ['$line', this._line, 'white'],
+                       ['$pos', this._linePos === -1 ? '' : `:${this._linePos}`, 'white']];
+        return buildMessage(this.ERROR_STRING, substitutes, 'red');
+        // return colors.red(`${this._checker} Error:`) + '\n' +
+        //     `\t${this._message}` + '\n' +
+        //     colors.red('\tin ') + this._file + '\n' +
+        //     colors.red('\tat ') + `${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`);
     }
 
     toShortString() {
-        return colors.blue(`${this._checker} Error in `) + this._file + colors.blue(` at ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`));
+        //return colors.blue(`${this._checker} Error in `) + this._file + colors.blue(` at ${this._line}` + (this._linePos === -1 ? '' : `:${this._linePos}`));
+         const substitutes = [['$checker', this._checker, 'blue'], ['$file', this._file, 'white'],
+                       ['$line', this._line, 'white'],
+                       ['$pos', this._linePos === -1 ? '' : `:${this._linePos}`, 'white']];
+        return buildMessage(this.SHORT_ERROR_STRING, substitutes, 'blue');
     }
 }
 
