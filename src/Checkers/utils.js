@@ -27,16 +27,16 @@
 const colors = require('colors/safe');
 
 function buildMessage(stringTemplate, substitutions, mainColor = 'white') {
-const messageParts = [stringTemplate];
-    substitutions.forEach((element) => {
+  const messageParts = [stringTemplate];
+  substitutions.forEach((element) => {
     for (let i = 0; i < messageParts.length; i++) {
-        const newElems = messageParts[i].split(element[0]);
-        if (newElems.length != 1) {
-            messageParts.splice(i, 1, colors[mainColor](newElems[0]), colors[element[2]](element[1]),  colors[mainColor](newElems[1]));
-        }
+      const newElems = messageParts[i].split(element[0]);
+      if (newElems.length != 1) {
+        messageParts.splice(i, 1, colors[mainColor](newElems[0]), colors[element[2]](element[1]),  colors[mainColor](newElems[1]));
+      }
     }
-});
-return messageParts.join('');
+  });
+  return messageParts.join('');
 }
 
 
