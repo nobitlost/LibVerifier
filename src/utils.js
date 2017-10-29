@@ -27,16 +27,31 @@
 const colors = require('colors/safe');
 
 function buildMessage(stringTemplate, substitutions, mainColor = 'white') {
-  const messageParts = [stringTemplate];
+  const messageObject = { str : stringTemplate,
+                          color : mainColor
+                        };
+  const messageParts = [messageObject];
   substitutions.forEach((element) => {
     for (let i = 0; i < messageParts.length; i++) {
-      const newElems = messageParts[i].split(element[0]);
+      const newElems = messageParts[i].str.split(element[0]);
+      const color = messageParts[i].color;
       if (newElems.length != 1) {
-        messageParts.splice(i, 1, colors[mainColor](newElems[0]), colors[element[2]](element[1]),  colors[mainColor](newElems[1]));
+        const leftMessageObj = { str : newElems[0],
+                                 color : color
+                               };
+        const midMessageObj = { str : element[1].toString(), // toString avoid unexpected casts
+                                color : element[2]
+                              };
+        const rightMessageObj = { str : newElems[1],
+                                  color : color
+                                };
+        messageParts.splice(i, 1, leftMessageObj, midMessageObj,  rightMessageObj);
       }
     }
   });
-  return messageParts.join('');
+  return messageParts.map((part) => {
+    return colors[part.color](part.str);
+  }).join('');
 }
 
 

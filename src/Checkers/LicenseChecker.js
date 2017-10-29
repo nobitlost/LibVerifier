@@ -30,7 +30,7 @@ const minimatch = require('minimatch');
 const colors = require('colors/safe');
 
 const checker = require('./AbstractChecker');
-const buildMessage = require('./utils').buildMessage;
+const buildMessage = require('../utils').buildMessage;
 
 const LICENSE_FILE_PATH = './resources/LICENSE.example';
 
