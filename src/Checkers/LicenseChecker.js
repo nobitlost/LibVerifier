@@ -186,7 +186,7 @@ class LicenseChecker extends checker {
      * @param {String} dirpath
      * @return {[ErrorMessage]}
      */
-    check(dirpath) {
+    check(dirpath, fixable = false) {
         const allFiles = this._getFiles(dirpath, []);
         const errors = [];
         errors.push(false); // reserved for LICENSE error

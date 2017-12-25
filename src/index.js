@@ -29,7 +29,12 @@ const path = require('path');
 const colors = require('colors/safe');
 
 const LicenseChecker = require('./Checkers/LicenseChecker');
+const SquirrelLintChecker = require('./Checkers/SquirrelLintChecker');
+
 const DEFAULT_EXCLUDE = '../excludes.json';
+
+var Linter = require('standard-engine').linter
+var commonOptions = require('./options')
 
 /**
  * Main Verifier class
@@ -51,7 +56,7 @@ class Verifier {
                 this.logger.error(err);
             }
         }
-        this.checkers = [new LicenseChecker(this._exclude)];
+        this.checkers = [new LicenseChecker(this._exclude), new SquirrelLintChecker(new Linter(commonOptions))];
     }
 
     /**

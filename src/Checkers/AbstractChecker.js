@@ -28,9 +28,10 @@ class AbstractChecker {
     /**
      * Check path
      * @param {string} path
+     * @param {Boolean} fixable
      * @return {[ErrorMessage]}
      */
-    check(path) {
+    check(path, fixable = false) {
         throw new Error('Unimplemented abstract method check(path)');
     }
 
