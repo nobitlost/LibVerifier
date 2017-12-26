@@ -58,8 +58,18 @@ class SquirrelLintChecker extends checker {
       }
     }
 
-    this._linter.lintFiles(files, {}, (error, data) => {
-      console.log(data);
+    this._linter.lintFiles(files, {fix:true}, (error, data) => {
+       var formatter;
+       try {
+           formatter = this._linter.eslint.CLIEngine.getFormatter();
+       }
+       catch (e) {
+           log.error(e.message);
+           return false;
+       }
+
+       const output = formatter(data.results);
+       console.log(output);
     });
 
     return errors.filter((error) => error != false);
