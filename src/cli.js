@@ -31,6 +31,7 @@ const Verifier = require('./index.js');
 let checkedFolder = '';
 
 let excludeFile = null;
+let fixable = false;
 
 program
     .version('0.0.1', '-v, --version')
@@ -40,6 +41,9 @@ program
     })
     .option('--exclude-file <file>', 'specify file with exclude list', (file) => {
         excludeFile = file;
+    })
+    .option('--fix', 'Fix warnings if possible', (enable) => {
+        fixable = true;
     })
     .parse(process.argv);
 
@@ -53,6 +57,6 @@ if (checkedFolder === '') {
     return;
 }
 
-const verifier = new Verifier(excludeFile);
+const verifier = new Verifier(excludeFile, fixable);
 const result = verifier.verify(checkedFolder);
 if (!result) process.exit(1);

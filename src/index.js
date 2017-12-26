@@ -41,7 +41,7 @@ var commonOptions = require('./options')
  */
 class Verifier {
 
-    constructor(excludeFile = null) {
+    constructor(excludeFile, fixable) {
         if (excludeFile === null) {
             this.excludeFile = DEFAULT_EXCLUDE;
         } else {
@@ -49,6 +49,7 @@ class Verifier {
         }
 
         this._exclude = null;
+        this._fixable = fixable;
         try {
             this._exclude = require(this.excludeFile);
         } catch (err) {
@@ -73,7 +74,7 @@ class Verifier {
         let verified = true;
 
         this.checkers.forEach((checker) => {
-            const errors = checker.check(absolutePath);
+            const errors = checker.check(absolutePath, this._fixable);
             if (errors.length != 0) {
                 checkersErrors.push(errors);
                 errors.forEach((error) => {
