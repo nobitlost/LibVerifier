@@ -41,98 +41,125 @@ var commonOptions = require('./options')
  */
 class Verifier {
 
-    constructor(excludeFile, fixable) {
-        if (excludeFile === null) {
-            this.excludeFile = DEFAULT_EXCLUDE;
-        } else {
-            this.excludeFile = excludeFile;
-        }
-
-        this._exclude = null;
-        this._fixable = fixable;
-        try {
-            this._exclude = require(this.excludeFile);
-        } catch (err) {
-            if (excludeFile != DEFAULT_EXCLUDE) {
-                this.logger.error(err);
-            }
-        }
-        this.checkers = [new LicenseChecker(this._exclude), new SquirrelLintChecker(new Linter(commonOptions))];
+  constructor(excludeFile, fixable) {
+    if (excludeFile === null) {
+      this.excludeFile = DEFAULT_EXCLUDE;
+    } else {
+      this.excludeFile = excludeFile;
     }
 
-    /**
-    * @param folderpath folder, where project is placed
-    * @return {Boolean}
-    */
-    verify(folderpath) {
-        const absolutePath = path.resolve(folderpath); // needs for correct excludes
-        if (!fs.existsSync(absolutePath)) {
-            this.logger.error('Path does not exist');
-            return false;
-        }
-        const checkersErrors = [];
-        let verified = true;
+    this._exclude = null;
+    this._fixable = fixable;
+    try {
+      this._exclude = require(this.excludeFile);
+    } catch (err) {
+      if (excludeFile != DEFAULT_EXCLUDE) {
+        this.logger.error(err);
+      }
+    }
+    this.checkers = [new LicenseChecker(this._exclude), new SquirrelLintChecker(new Linter(commonOptions))];
+  }
 
-        this.checkers.forEach((checker) => {
-            const errors = checker.check(absolutePath, this._fixable);
-            if (errors.length != 0) {
-                checkersErrors.push(errors);
-                errors.forEach((error) => {
-                    if (verified) this.logger.error('1) All files with errors:');
-                    this.logger.error(error.toShortString());
-                    // prepare to print short error messages
-                    verified = false;
-                });
-            }
+  /**
+   * @param folderpath folder, where project is placed
+   * @return {Promise(Boolean)}
+   */
+  verify(folderpath) {
+    const absolutePath = path.resolve(folderpath); // needs for correct excludes
+    if (!fs.existsSync(absolutePath)) {
+      this.logger.error('Path does not exist');
+      return new Promise((res, rej) => {
+        rej();
+      });
+    }
+
+    let results = [];
+
+    this.checkers.forEach((checker) => {
+      results.push(checker.check(absolutePath, this._fixable));
+    });
+
+    return new Promise((resolve, reject) => {
+      const checkersErrors = [];
+      let verified = true;
+
+      Promise.all(results).then((data) => {
+        data.forEach((checkerResults) => {
+          if (checkerResults.output) {
+            checkersErrors.push(checkerResults.output);
+          } else if (checkerResults.error) {
+            checkersErrors.push(checkerResults.error);
+            verified = false;
+          } else if (checkerResults.length != 0) {
+            checkersErrors.push(checkerResults);
+            checkerResults.forEach((error) => {
+              if (verified) this.logger.error('1) All files with errors:');
+              this.logger.error(error.toShortString());
+              // prepare to print short error messages
+              verified = false;
+            }); // CHECK RESULTS
+          }
+        }); // forEach
+
+        this._createResponse(verified, checkersErrors);
+        if (!verified) reject();
+        resolve();
+
+      }, (reason) => {
+        this.logger.error(reason);
+        reject();
+      });
+    });
+
+
+  }
+
+  _createResponse(verified, checkersErrors) {
+    if (verified) {
+      this.logger.info(colors.green('Checks PASSED'));
+      return false;
+    }
+
+    this.logger.error('2) Detailed errors:');
+
+    checkersErrors.forEach((listOfCheckerErr) => {
+      if (typeof listOfCheckerErr == "string") {
+        this.logger.error(listOfCheckerErr);
+      } else
+        listOfCheckerErr.forEach((error) => {
+          this.logger.error(error.toString());
         });
+    });
+    this.logger.error(colors.red('Checks FAILED'));
+    return true;
+  }
 
-        return this._createResponse(verified, checkersErrors);
+  /**
+   * @return {{debug(), info(), warning(), error()}}
+   */
+  get logger() {
+    return this._logger || {
+      debug: console.log,
+      info: console.info,
+      warning: console.warning,
+      error: console.error
+    };
+  }
 
-    }
+  /**
+   * @param {{debug(), info(), warning(), error()}} value
+   */
+  set logger(value) {
+    this._logger = value;
+  }
 
-    _createResponse(verified, checkersErrors) {
-        if (verified) {
-            this.logger.info(colors.green('Checks PASSED'));
-            return false;
-        }
+  get exclude() {
+    return this._exclude;
+  }
 
-        this.logger.error('2) Detailed errors:');
-
-        checkersErrors.forEach((listOfCheckerErr) => {
-            listOfCheckerErr.forEach((error) => {
-                this.logger.error(error.toString());
-            });
-        });
-        this.logger.error(colors.red('Checks FAILED'));
-        return true;
-    }
-
-    /**
-     * @return {{debug(), info(), warning(), error()}}
-     */
-    get logger() {
-        return this._logger || {
-            debug: console.log,
-            info: console.info,
-            warning: console.warning,
-            error: console.error
-        };
-    }
-
-    /**
-     * @param {{debug(), info(), warning(), error()}} value
-     */
-    set logger(value) {
-        this._logger = value;
-    }
-
-    get exclude() {
-        return this._exclude;
-    }
-
-    set exclude(value) {
-        this._exclude = value;
-    }
+  set exclude(value) {
+    this._exclude = value;
+  }
 
 }
 

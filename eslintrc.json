@@ -18,6 +18,7 @@
 	},
 	"plugins": ["squirrel"],
 	"rules": {
+		"squirrel/ei-license": [2, "./LICENSE"],
 		"squirrel/ei-version": 1,
 		"squirrel/ei-require": 2,
 		"indent": [

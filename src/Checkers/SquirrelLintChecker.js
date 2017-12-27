@@ -35,8 +35,8 @@ class SquirrelLintChecker extends checker {
   constructor(linter, exclude = null) {
     super();
     this._linter = linter;
-    this._extensionSet = [".nut"];
-    this._excludeList = [];
+    this._extensionSet = new Set([".nut"]);
+    this._excludeList = exclude || [];
   }
 
   /**
@@ -53,68 +53,30 @@ class SquirrelLintChecker extends checker {
     for (const file of allFiles) {
       const parsedPath = path.parse(file);
       // list of files
-      if (this._extensionSet.indexOf(parsedPath.ext) >= 0) {
+      if (this._extensionSet.has(parsedPath.ext)) {
         files.push(file);
       }
     }
 
-    this._linter.lintFiles(files, {fix : shouldFix}, (error, data) => {
-       var formatter;
-       try {
-           formatter = this._linter.eslint.CLIEngine.getFormatter();
-       }
-       catch (e) {
-           log.error(e.message);
-           return false;
-       }
+    return new Promise((resolve, reject) => {
+      this._linter.lintFiles(files, {fix : shouldFix}, (error, data) => {
+         if (error) {
+           reject({error:error});
+           return;
+         }
+         var formatter;
+         try {
+             formatter = this._linter.eslint.CLIEngine.getFormatter();
+         }
+         catch (e) {
+             reject({error:e.message});
+             return;
+         }
 
-       const output = formatter(data.results);
-       console.log(output);
-    });
-
-    return errors.filter((error) => error != false);
-  }
-
-  /**
-   * Regexp list for exclude
-   * @return {Array} return regexp lis
-   */
-  get excludeList() {
-    return this._excludeList;
-  }
-
-  /**
-   * Construct exclude regexp list from filename
-   * @param {JSON} settings for exclude file. '' for default
-   */
-  set excludeList(settings) {
-    if (settings === null) {
-      this._excludeList = [];
-      return;
-    }
-    const filenames = settings.SquirrelLintChecker;
-    // filters not empty strings, and makes regular expression from template
-    this._excludeList = filenames.map((value) => value.trimLeft()) // trim for "is commented" check
-      .filter((value) => (value !== '' && value[0] !== '#'))
-      .map((value) => minimatch.makeRe(value));
-  }
-
-  /**
-   * @return {Set} set of extensions with leading dot
-   */
-  get extensionSet() {
-    return this._extensionSet;
-  }
-
-  /**
-   * @param {Set} set of extensions with leading dot
-   */
-  set extensionSet(set) {
-    if (set instanceof Set) {
-      this._extensionSet = set;
-    } else {
-      this.logger.error('Wrong argument type');
-    }
+         const output = formatter(data.results);
+         resolve({output: output});
+      }); // lintFiles
+    }); // Promise
   }
 
   _isExclude(filepath) {

@@ -58,5 +58,9 @@ if (checkedFolder === '') {
 }
 
 const verifier = new Verifier(excludeFile, fixable);
-const result = verifier.verify(checkedFolder);
-if (!result) process.exit(1);
+verifier
+.verify(checkedFolder)
+.catch(function(reason) {
+  console.error(reason);
+  process.exit(1);
+});
