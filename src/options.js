@@ -7,7 +7,7 @@ module.exports = {
   cmd: 'standard',
   eslint: eslint,
   eslintConfig: {
-    configFile: path.join(__dirname, '../eslintrc.nut'),
+    configFile: path.join(__dirname, '../eslintrc.nut.json'),
     useEslintrc: true,
     plugins: ["babel", "squirrel"],
     parser: "babel-eslint",
